@@ -1,0 +1,35 @@
+{
+  "name": "server",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "check-types": "tsc -b",
+    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run dist/index.mjs"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@relay/env": "workspace:*",
+    "@relay/api": "workspace:*",
+    "@relay/auth": "workspace:*",
+    "@relay/db": "workspace:*",
+    "@relay/millionsend": "workspace:*",
+    "elysia": "catalog:",
+    "@elysiajs/cors": "^1.4.2",
+    "@sinclair/typebox": "^0.34.49",
+    "@trpc/server": "catalog:",
+    "@elysiajs/trpc": "^1.1.0",
+    "better-auth": "catalog:",
+    "@hono/trpc-server": "^0.4.2"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "tsdown": "0.22.0",
+    "unrun": "^0.3.1",
+    "@relay/config": "workspace:*",
+    "@types/bun": "catalog:"
+  }
+}

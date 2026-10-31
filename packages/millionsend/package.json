@@ -1,0 +1,21 @@
+{
+  "name": "@relay/millionsend",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@relay/config": "workspace:*"
+  },
+  "dependencies": {
+    "millionsend": "^0.10.0",
+    "@relay/env": "workspace:*"
+  }
+}

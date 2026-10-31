@@ -1,0 +1,3 @@
+{
+  "extends": "@relay/config/tsconfig.base.json"
+}

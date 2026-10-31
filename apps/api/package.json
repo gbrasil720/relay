@@ -1,0 +1,27 @@
+{
+  "name": "@relay/api",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@relay/config": "workspace:*",
+    "elysia": "catalog:"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@relay/env": "workspace:*",
+    "@relay/auth": "workspace:*",
+    "@relay/db": "workspace:*",
+    "@trpc/server": "catalog:",
+    "@trpc/client": "catalog:"
+  }
+}
