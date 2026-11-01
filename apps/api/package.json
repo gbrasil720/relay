@@ -21,6 +21,8 @@
     "@relay/env": "workspace:*",
     "@relay/auth": "workspace:*",
     "@relay/db": "workspace:*",
+    "@relay/millionsend": "workspace:*",
+    "drizzle-orm": "^0.45.2",
     "@trpc/server": "catalog:",
     "@trpc/client": "catalog:"
   }
