@@ -1,0 +1,125 @@
+@theme {
+  --color-rl-ink: #0c0c0e;
+  --color-rl-card: #0f1014;
+  --color-rl-raised: #131419;
+  --color-rl-chip: #16181f;
+  --color-rl-hairline: #1b1c22;
+  --color-rl-line: #24262e;
+  --color-rl-edge: #2e3039;
+  --color-rl-fg: #eeeff2;
+  --color-rl-soft: #bec1ca;
+  --color-rl-dim: #a3a6b0;
+  --color-rl-faint: #868994;
+  --color-rl-accent: #c81e3a;
+  --color-rl-accent-light: #dc6f81;
+  --color-rl-accent-pale: #e69aa6;
+  --color-rl-sky-ink: #34080f;
+  --color-rl-ok: #6bd49a;
+  --font-rl-display: "Bricolage Grotesque", ui-sans-serif, sans-serif;
+  --font-rl-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-rl-mono: "Geist Mono", ui-monospace, monospace;
+  --font-rl-pixel: "Silkscreen", ui-monospace, monospace;
+  --font-rl-mail: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-rl-serif: Georgia, serif;
+}
+
+/* The design has no border-box reset: every max-width there is content width. */
+@layer base {
+  .rl-landing,
+  .rl-landing *:not(input, button, canvas) {
+    box-sizing: content-box;
+  }
+}
+
+@keyframes rl-word {
+  from {
+    opacity: 0;
+    transform: translateY(40%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rl-line {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rl-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45%,
+  55% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes rl-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes rl-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.rl-word {
+  animation: rl-word 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.rl-line {
+  animation: rl-line 0.4s ease-out both;
+}
+
+.rl-hop {
+  animation: rl-hop 2.6s ease-in-out infinite;
+}
+
+.rl-float {
+  animation: rl-float 3.2s ease-in-out infinite;
+}
+
+.rl-blink {
+  animation: rl-blink 1.2s steps(2) infinite;
+}
+
+.rl-pixelated {
+  image-rendering: pixelated;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.rl-landing) {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rl-word,
+  .rl-line,
+  .rl-hop,
+  .rl-float,
+  .rl-blink {
+    animation: none;
+  }
+}
