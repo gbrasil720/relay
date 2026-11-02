@@ -69,7 +69,7 @@ function Nav() {
         <div className="hidden flex-wrap justify-center gap-x-[26px] text-[15px] min-[860px]:flex">
           {links.map(([href, label]) => (
             <a
-              className="py-2.5 text-rl-dim no-underline hover:text-white"
+              className="rl-link py-2.5 text-rl-dim no-underline hover:text-white"
               href={href}
               key={href}
             >
@@ -79,7 +79,7 @@ function Nav() {
         </div>
         <div className="flex items-center justify-end gap-x-4 min-[860px]:gap-x-8">
           <a
-            className="rounded-[10px] bg-rl-fg px-4 py-[11px] font-bold text-[15px] text-rl-ink no-underline"
+            className="rl-press rounded-[10px] bg-rl-fg px-4 py-[11px] font-bold text-[15px] text-rl-ink no-underline"
             href="#topo"
           >
             Entrar na lista
@@ -1005,7 +1005,7 @@ function Footer() {
           {SHOW_FOOTER_LINKS &&
             links.map(([href, label]) => (
               <a
-                className="text-rl-dim no-underline hover:text-white"
+                className="rl-link text-rl-dim no-underline hover:text-white"
                 href={href}
                 key={href}
               >
@@ -1013,7 +1013,7 @@ function Footer() {
               </a>
             ))}
           <Link
-            className="text-rl-dim no-underline hover:text-white"
+            className="rl-link text-rl-dim no-underline hover:text-white"
             to="/privacidade"
           >
             Privacidade
