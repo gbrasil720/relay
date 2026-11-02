@@ -115,18 +115,18 @@ function Hero({ joinedEmail, onJoined }: WaitlistProps) {
           className="m-0 font-light font-rl-display text-[clamp(48px,7vw,100px)] leading-[0.95] tracking-[-0.05em] text-balance"
           id="hero-title"
         >
-          <span className="rl-word block [animation-delay:.1s]">
+          <span className="rl-word block [animation-delay:80ms]">
             Tudo que você lança,
           </span>
-          <span className="rl-word block font-extrabold [animation-delay:.25s]">
+          <span className="rl-word block font-extrabold [animation-delay:160ms]">
             contado para <span className="text-rl-accent-light">quem usa.</span>
           </span>
         </h1>
-        <p className="rl-word m-0 max-w-[600px] text-[clamp(17px,1.6vw,20px)] text-pretty text-rl-soft leading-normal [animation-delay:.4s]">
+        <p className="rl-word m-0 max-w-[600px] text-[clamp(17px,1.6vw,20px)] text-pretty text-rl-soft leading-normal [animation-delay:240ms]">
           Conecte o GitHub. A Relay separa o que muda a vida de quem usa, deixa
           a manutenção de fora e escreve o email de novidades com a sua marca.
         </p>
-        <div className="rl-word flex w-full flex-col items-center gap-3 [animation-delay:.5s]">
+        <div className="rl-word flex w-full flex-col items-center gap-3 [animation-delay:320ms]">
           <WaitlistForm
             joinedEmail={joinedEmail}
             onJoined={onJoined}
@@ -517,7 +517,7 @@ function EmailPreview() {
             <div className="flex flex-col gap-4">
               {out.items.map(([title, body], i) => (
                 <div
-                  className="rl-line grid grid-cols-[28px_minmax(0,1fr)] items-start gap-3"
+                  className="rl-swap grid grid-cols-[28px_minmax(0,1fr)] items-start gap-3"
                   key={`${tone}-${title}`}
                 >
                   <span className="grid size-7 place-items-center rounded-lg bg-[#EEF0FD] font-bold text-[#3446E0] text-[13px]">

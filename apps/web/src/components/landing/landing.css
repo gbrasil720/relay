@@ -21,6 +21,8 @@
   --font-rl-pixel: "Silkscreen", ui-monospace, monospace;
   --font-rl-mail: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-rl-serif: Georgia, serif;
+  --ease-rl-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-rl-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 /* The design has no border-box reset: every max-width there is content width. */
@@ -31,25 +33,16 @@
   }
 }
 
-@keyframes rl-word {
+@keyframes rl-fade {
   from {
     opacity: 0;
-    transform: translateY(40%);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 
-@keyframes rl-line {
+@keyframes rl-rise {
   from {
     opacity: 0;
-    transform: translateX(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
+    transform: translateY(16px);
   }
 }
 
@@ -84,42 +77,209 @@
   }
 }
 
-.rl-word {
-  animation: rl-word 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.rl-line {
-  animation: rl-line 0.4s ease-out both;
-}
-
-.rl-hop {
-  animation: rl-hop 2.6s ease-in-out infinite;
-}
-
-.rl-float {
-  animation: rl-float 3.2s ease-in-out infinite;
-}
-
-.rl-blink {
-  animation: rl-blink 1.2s steps(2) infinite;
+@keyframes rl-draw {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
 }
 
 .rl-pixelated {
   image-rendering: pixelated;
 }
 
+/* Base rules are what reduced motion gets: fades only. Movement is added below. */
+.rl-word {
+  animation: rl-fade 200ms ease both;
+}
+
+.rl-reveal,
+.rl-stagger > *,
+.rl-swap,
+.rl-pop {
+  transition: opacity 200ms ease;
+}
+
+.rl-reveal:not([data-visible]),
+.rl-stagger:not([data-visible]) > * {
+  opacity: 0;
+}
+
+@starting-style {
+  .rl-swap,
+  .rl-pop {
+    opacity: 0;
+  }
+}
+
+.rl-stagger > :nth-child(2),
+.rl-swap:nth-child(2) {
+  --rl-i: 1;
+}
+
+.rl-stagger > :nth-child(3),
+.rl-swap:nth-child(3) {
+  --rl-i: 2;
+}
+
+.rl-stagger > :nth-child(4) {
+  --rl-i: 3;
+}
+
+.rl-stagger > :nth-child(5) {
+  --rl-i: 4;
+}
+
+.rl-stagger > :nth-child(6) {
+  --rl-i: 5;
+}
+
+.rl-stagger > :nth-child(7) {
+  --rl-i: 6;
+}
+
+.rl-stagger > :nth-child(8) {
+  --rl-i: 7;
+}
+
+.rl-link {
+  transition: color 150ms ease;
+}
+
+.rl-press {
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.rl-progress {
+  display: none;
+}
+
+.rl-faq[open] .rl-faq-icon {
+  transform: rotate(45deg);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html:has(.rl-landing) {
     scroll-behavior: smooth;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .rl-word,
-  .rl-line,
-  .rl-hop,
-  .rl-float,
+  .rl-word {
+    animation: rl-rise 700ms var(--ease-rl-out) both;
+  }
+
+  .rl-reveal,
+  .rl-stagger > * {
+    transition:
+      opacity 600ms var(--ease-rl-out),
+      transform 600ms var(--ease-rl-out);
+    transition-delay: calc(var(--rl-i, 0) * 60ms);
+  }
+
+  .rl-reveal:not([data-visible]),
+  .rl-stagger:not([data-visible]) > * {
+    transform: translateY(16px);
+  }
+
+  /* Each meter fills one 12th at a time, like the pixel art around it. */
+  .rl-meter {
+    transition: clip-path 480ms steps(12);
+    transition-delay: calc(var(--rl-i, 0) * 60ms);
+  }
+
+  .rl-stagger:not([data-visible]) .rl-meter {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .rl-swap {
+    transition:
+      opacity 240ms var(--ease-rl-out),
+      transform 240ms var(--ease-rl-out),
+      filter 240ms var(--ease-rl-out);
+    transition-delay: calc(var(--rl-i, 0) * 40ms);
+  }
+
+  .rl-pop {
+    transition:
+      opacity 300ms var(--ease-rl-out),
+      transform 300ms var(--ease-rl-out);
+  }
+
+  @starting-style {
+    .rl-swap {
+      filter: blur(2px);
+      transform: translateY(4px);
+    }
+
+    .rl-pop {
+      transform: scale(0.96);
+    }
+  }
+
+  .rl-hop {
+    animation: rl-hop 2.6s ease-in-out infinite;
+  }
+
+  .rl-land {
+    animation: rl-hop 900ms ease-in-out;
+  }
+
+  .rl-float {
+    animation: rl-float 3.2s ease-in-out infinite;
+  }
+
   .rl-blink {
-    animation: none;
+    animation: rl-blink 1.2s steps(1) infinite;
+  }
+
+  .rl-press {
+    transition:
+      transform 160ms var(--ease-rl-out),
+      color 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .rl-press:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Pinned to the viewport centre line, so it follows the reader down the steps. */
+  @supports (animation-timeline: view()) {
+    .rl-progress {
+      display: block;
+      animation: rl-draw linear both;
+      animation-timeline: view(block 50%);
+    }
+  }
+
+  /* Browsers without these keep the instant open. */
+  .rl-faq {
+    interpolate-size: allow-keywords;
+  }
+
+  .rl-faq::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: clip;
+    transition:
+      block-size 200ms var(--ease-rl-out),
+      opacity 200ms var(--ease-rl-out),
+      content-visibility 200ms allow-discrete;
+  }
+
+  .rl-faq[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+
+  .rl-faq-icon {
+    transition: transform 200ms var(--ease-rl-in-out);
   }
 }
