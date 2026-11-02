@@ -48,7 +48,15 @@ function attribution() {
   };
 }
 
-function JoinedCard({ email, closing }: { email: string; closing: boolean }) {
+function JoinedCard({
+  email,
+  closing,
+  celebrate,
+}: {
+  email: string;
+  closing: boolean;
+  celebrate: boolean;
+}) {
   return (
     <div
       className={cn(
@@ -56,10 +64,16 @@ function JoinedCard({ email, closing }: { email: string; closing: boolean }) {
         closing
           ? "border-white bg-white text-[#16181D]"
           : "border-rl-edge bg-rl-raised/90 text-rl-fg",
+        celebrate && "rl-pop",
       )}
       role="status"
     >
-      <span className="grid size-12 flex-none place-items-center rounded-xl bg-rl-sky-ink">
+      <span
+        className={cn(
+          "grid size-12 flex-none place-items-center rounded-xl bg-rl-sky-ink",
+          celebrate && "rl-land",
+        )}
+      >
         <PixelArt cols={16} pixels={MASCOT} size={2} />
       </span>
       <span className="flex min-w-0 flex-col gap-0.5">
@@ -91,6 +105,8 @@ export function WaitlistForm({
   const closing = source === "closing";
   const inputId = useId();
   const [email, setEmail] = useState("");
+  // Only a signup in this visit celebrates; a returning visitor's card stays still.
+  const [returning] = useState(Boolean(joinedEmail));
   const join = useMutation(
     trpc.waitlist.join.mutationOptions({
       onSuccess: (_, input) => {
@@ -112,7 +128,14 @@ export function WaitlistForm({
     join.mutate({ email, source, ...attribution() });
   }
 
-  if (joinedEmail) return <JoinedCard closing={closing} email={joinedEmail} />;
+  if (joinedEmail)
+    return (
+      <JoinedCard
+        celebrate={!returning}
+        closing={closing}
+        email={joinedEmail}
+      />
+    );
 
   return (
     <form
