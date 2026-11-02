@@ -1,0 +1,21 @@
+# Local database for development. Never point dev at the production Neon URL.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: relay
+    ports:
+      - "54320:5432"
+    volumes:
+      - relay-pg:/var/lib/postgresql/data
+  neon-proxy:
+    image: ghcr.io/timowilhelm/local-neon-http-proxy:main
+    environment:
+      PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/relay
+    ports:
+      - "4444:4444"
+    depends_on:
+      - postgres
+volumes:
+  relay-pg:
