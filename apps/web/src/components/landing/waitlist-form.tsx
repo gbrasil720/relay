@@ -80,7 +80,7 @@ function JoinedCard({
         <strong className="text-[16px]">Você está na lista.</strong>
         <span
           className={cn(
-            "break-words text-[14px]",
+            "text-[14px] wrap-anywhere",
             closing ? "text-[#444851]" : "text-rl-dim",
           )}
         >
