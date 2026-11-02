@@ -1,0 +1,84 @@
+@keyframes rl-rise-admin {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+.rl-admin a {
+  color: #eeeff2;
+}
+
+.rl-admin a:hover {
+  color: #ffffff;
+}
+
+/* The design's 30px menu column holds a 44px button; it overflows into the gap. */
+.rl-admin main li > button:last-child {
+  justify-self: end;
+}
+
+.rl-admin main li > span:last-child:has(> button) {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rl-admin main button {
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+/* The entrance is for arriving; moving between screens stays instant. */
+.rl-admin[data-navigated] main [style*="rl-rise-admin"] {
+  animation: none !important;
+}
+
+.rl-admin-bar {
+  transition: opacity 200ms ease;
+}
+
+@starting-style {
+  .rl-admin-bar {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rl-admin main button {
+    transition:
+      transform 160ms var(--ease-rl-out),
+      background-color 150ms ease,
+      border-color 150ms ease,
+      color 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .rl-admin main button:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .rl-admin-bar {
+    transition:
+      opacity 200ms var(--ease-rl-out),
+      transform 200ms var(--ease-rl-out);
+  }
+
+  @starting-style {
+    .rl-admin-bar {
+      transform: translateY(4px);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rl-admin * {
+    animation: none !important;
+  }
+
+  .rl-admin:not([data-navigated]) main [style*="rl-rise-admin"] {
+    animation: rl-fade 200ms ease both !important;
+  }
+}
