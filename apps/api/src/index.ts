@@ -1,3 +1,4 @@
+import { env } from "@relay/env/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { Context } from "./context";
 
@@ -21,4 +22,11 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       session: ctx.session,
     },
   });
+});
+
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!env.ADMIN_EMAILS.includes(ctx.session.user.email.toLowerCase())) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Admin only" });
+  }
+  return next();
 });

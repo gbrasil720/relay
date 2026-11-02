@@ -27,8 +27,20 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default("development"),
+    // Comma-separated emails allowed into /admin.
+    ADMIN_EMAILS: z
+      .string()
+      .default("")
+      .transform((value) =>
+        value
+          .split(",")
+          .map((email) => email.trim().toLowerCase())
+          .filter(Boolean),
+      ),
     MILLIONSEND_API_KEY: z.string().min(1).optional(),
     MILLIONSEND_BASE_URL: z.url().default("https://api.millionsend.com"),
+    // Where invite links lead. Unset, invites are refused: signup is not open yet.
+    INVITE_SIGNUP_URL: z.url().optional(),
     // Placeholder only; replace with a verified sender before sending.
     MILLIONSEND_FROM_EMAIL: z
       .string()
