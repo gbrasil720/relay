@@ -452,10 +452,10 @@ function EmailPreview() {
           {(Object.keys(TONES) as Tone[]).map((id) => (
             <button
               aria-pressed={id === tone}
-              className={`min-h-11 cursor-pointer rounded-[10px] px-[18px] text-[15px] ${
+              className={`rl-press min-h-11 cursor-pointer rounded-[10px] border-[1.5px] px-[18px] font-semibold text-[15px] ${
                 id === tone
-                  ? "border-[1.5px] border-rl-accent bg-rl-accent/15 font-bold text-rl-fg"
-                  : "border border-rl-edge bg-transparent font-medium text-rl-dim"
+                  ? "border-rl-accent bg-rl-accent/15 text-rl-fg"
+                  : "border-rl-edge bg-transparent text-rl-dim"
               }`}
               key={id}
               onClick={() => setTone(id)}
@@ -491,7 +491,7 @@ function EmailPreview() {
             </div>
             <div className="flex gap-2">
               <span className="w-14 flex-none">Assunto</span>
-              <span className="font-semibold text-[#16181D]">
+              <span className="rl-swap font-semibold text-[#16181D]" key={tone}>
                 {out.subject}
               </span>
             </div>
@@ -507,10 +507,16 @@ function EmailPreview() {
               </span>
             </div>
             <div className="flex flex-col gap-1.5">
-              <h3 className="m-0 font-bold text-[23px] leading-[1.2] tracking-[-0.01em]">
+              <h3
+                className="rl-swap m-0 font-bold text-[23px] leading-[1.2] tracking-[-0.01em]"
+                key={`${tone}-title`}
+              >
                 {out.title}
               </h3>
-              <p className="m-0 text-[#444851] text-[15px] leading-normal">
+              <p
+                className="rl-swap m-0 text-[#444851] text-[15px] leading-normal"
+                key={`${tone}-intro`}
+              >
                 {out.intro}
               </p>
             </div>
@@ -536,7 +542,9 @@ function EmailPreview() {
               Abrir a Tinta
             </span>
             <p className="m-0 border-[#ECEAE4] border-t pt-4 text-[#6A6E76] text-[13px]">
-              — {out.sign}
+              <span className="rl-swap inline-block" key={tone}>
+                — {out.sign}
+              </span>
               <br />
               Você recebe isto porque usa a Tinta.{" "}
               <span className="underline">Descadastrar</span>
@@ -554,7 +562,14 @@ function EmailPreview() {
             </span>{" "}
             virou a linha 1.
           </Callout>
-          <Callout side="right" title={`Tom: ${out.name}`}>
+          <Callout
+            side="right"
+            title={
+              <span className="rl-swap inline-block" key={tone}>
+                Tom: {out.name}
+              </span>
+            }
+          >
             Você define uma vez. Pode reescrever qualquer linha antes de
             aprovar.
           </Callout>
