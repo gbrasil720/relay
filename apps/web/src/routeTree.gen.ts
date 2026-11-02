@@ -11,9 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteRouteImport } from './routes/_auth/route'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as AuthDashboardRouteImport } from './routes/_auth/dashboard'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminChangelogRouteImport } from './routes/admin/changelog'
+import { Route as AdminClientesRouteImport } from './routes/admin/clientes'
+import { Route as AdminConvitesRouteImport } from './routes/admin/convites'
+import { Route as AdminEntregaRouteImport } from './routes/admin/entrega'
+import { Route as AdminUsoRouteImport } from './routes/admin/uso'
+import { Route as AdminWaitlistRouteImport } from './routes/admin/waitlist'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/_auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -39,39 +52,134 @@ const AuthDashboardRoute = AuthDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminChangelogRoute = AdminChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminClientesRoute = AdminClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminConvitesRoute = AdminConvitesRouteImport.update({
+  id: '/convites',
+  path: '/convites',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminEntregaRoute = AdminEntregaRouteImport.update({
+  id: '/entrega',
+  path: '/entrega',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsoRoute = AdminUsoRouteImport.update({
+  id: '/uso',
+  path: '/uso',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminWaitlistRoute = AdminWaitlistRouteImport.update({
+  id: '/waitlist',
+  path: '/waitlist',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
   '/dashboard': typeof AuthDashboardRoute
+  '/admin/changelog': typeof AdminChangelogRoute
+  '/admin/clientes': typeof AdminClientesRoute
+  '/admin/convites': typeof AdminConvitesRoute
+  '/admin/entrega': typeof AdminEntregaRoute
+  '/admin/uso': typeof AdminUsoRoute
+  '/admin/waitlist': typeof AdminWaitlistRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
   '/dashboard': typeof AuthDashboardRoute
+  '/admin/changelog': typeof AdminChangelogRoute
+  '/admin/clientes': typeof AdminClientesRoute
+  '/admin/convites': typeof AdminConvitesRoute
+  '/admin/entrega': typeof AdminEntregaRoute
+  '/admin/uso': typeof AdminUsoRoute
+  '/admin/waitlist': typeof AdminWaitlistRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/privacidade': typeof PrivacidadeRoute
   '/_auth/dashboard': typeof AuthDashboardRoute
+  '/admin/changelog': typeof AdminChangelogRoute
+  '/admin/clientes': typeof AdminClientesRoute
+  '/admin/convites': typeof AdminConvitesRoute
+  '/admin/entrega': typeof AdminEntregaRoute
+  '/admin/uso': typeof AdminUsoRoute
+  '/admin/waitlist': typeof AdminWaitlistRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/privacidade' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/privacidade'
+    | '/dashboard'
+    | '/admin/changelog'
+    | '/admin/clientes'
+    | '/admin/convites'
+    | '/admin/entrega'
+    | '/admin/uso'
+    | '/admin/waitlist'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/privacidade' | '/dashboard'
+  to:
+    | '/'
+    | '/login'
+    | '/privacidade'
+    | '/dashboard'
+    | '/admin/changelog'
+    | '/admin/clientes'
+    | '/admin/convites'
+    | '/admin/entrega'
+    | '/admin/uso'
+    | '/admin/waitlist'
+    | '/admin'
   id:
-    '__root__' | '/' | '/_auth' | '/login' | '/privacidade' | '/_auth/dashboard'
+    | '__root__'
+    | '/'
+    | '/_auth'
+    | '/admin'
+    | '/login'
+    | '/privacidade'
+    | '/_auth/dashboard'
+    | '/admin/changelog'
+    | '/admin/clientes'
+    | '/admin/convites'
+    | '/admin/entrega'
+    | '/admin/uso'
+    | '/admin/waitlist'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRouteRoute: typeof AuthRouteRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
 }
@@ -90,6 +198,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -113,6 +228,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDashboardRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/changelog': {
+      id: '/admin/changelog'
+      path: '/changelog'
+      fullPath: '/admin/changelog'
+      preLoaderRoute: typeof AdminChangelogRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/clientes': {
+      id: '/admin/clientes'
+      path: '/clientes'
+      fullPath: '/admin/clientes'
+      preLoaderRoute: typeof AdminClientesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/convites': {
+      id: '/admin/convites'
+      path: '/convites'
+      fullPath: '/admin/convites'
+      preLoaderRoute: typeof AdminConvitesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/entrega': {
+      id: '/admin/entrega'
+      path: '/entrega'
+      fullPath: '/admin/entrega'
+      preLoaderRoute: typeof AdminEntregaRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/uso': {
+      id: '/admin/uso'
+      path: '/uso'
+      fullPath: '/admin/uso'
+      preLoaderRoute: typeof AdminUsoRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/waitlist': {
+      id: '/admin/waitlist'
+      path: '/waitlist'
+      fullPath: '/admin/waitlist'
+      preLoaderRoute: typeof AdminWaitlistRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
@@ -128,9 +292,34 @@ const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
   AuthRouteRouteChildren,
 )
 
+interface AdminRouteRouteChildren {
+  AdminChangelogRoute: typeof AdminChangelogRoute
+  AdminClientesRoute: typeof AdminClientesRoute
+  AdminConvitesRoute: typeof AdminConvitesRoute
+  AdminEntregaRoute: typeof AdminEntregaRoute
+  AdminUsoRoute: typeof AdminUsoRoute
+  AdminWaitlistRoute: typeof AdminWaitlistRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminChangelogRoute: AdminChangelogRoute,
+  AdminClientesRoute: AdminClientesRoute,
+  AdminConvitesRoute: AdminConvitesRoute,
+  AdminEntregaRoute: AdminEntregaRoute,
+  AdminUsoRoute: AdminUsoRoute,
+  AdminWaitlistRoute: AdminWaitlistRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRouteRoute: AuthRouteRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   PrivacidadeRoute: PrivacidadeRoute,
 }
