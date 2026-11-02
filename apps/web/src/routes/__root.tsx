@@ -48,7 +48,10 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootComponent() {
   const isPublicPage = useLocation({
-    select: (l) => l.pathname === "/" || l.pathname === "/privacidade",
+    select: (l) =>
+      l.pathname === "/" ||
+      l.pathname === "/privacidade" ||
+      l.pathname.startsWith("/admin"),
   });
 
   return (
