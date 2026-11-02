@@ -100,16 +100,25 @@ export function HeroField() {
     paint(ctx, fieldPixels(sim), FIELD_COLS);
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    let onScreen = true;
+    const observer = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+    });
+    observer.observe(ctx.canvas);
+
     const ticks = setInterval(() => {
+      if (!onScreen) return;
       tickSim(sim);
       setReadout(readoutOf(sim));
     }, 1600);
     const frames = setInterval(() => {
+      if (!onScreen) return;
       frameSim(sim);
       paint(ctx, fieldPixels(sim), FIELD_COLS);
     }, 120);
 
     return () => {
+      observer.disconnect();
       clearInterval(ticks);
       clearInterval(frames);
     };
