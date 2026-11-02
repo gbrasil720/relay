@@ -59,7 +59,7 @@ export function SkyField() {
   );
 }
 
-export function StripField() {
+export function StripField({ className = "opacity-60" }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -70,17 +70,27 @@ export function StripField() {
     paint(ctx, stripPixels(frame), STRIP_COLS);
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    let onScreen = true;
+    const observer = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+    });
+    observer.observe(ctx.canvas);
+
     const frames = setInterval(() => {
+      if (!onScreen) return;
       frame += 1;
       paint(ctx, stripPixels(frame), STRIP_COLS);
     }, 160);
-    return () => clearInterval(frames);
+    return () => {
+      observer.disconnect();
+      clearInterval(frames);
+    };
   }, []);
 
   return (
     <canvas
       aria-hidden="true"
-      className="rl-pixelated pointer-events-none absolute right-0 bottom-[-3vw] left-0 h-[10vw] w-full opacity-60"
+      className={`rl-pixelated pointer-events-none absolute right-0 bottom-[-3vw] left-0 h-[10vw] w-full ${className}`}
       height={STRIP_ROWS}
       ref={ref}
       width={STRIP_COLS}
