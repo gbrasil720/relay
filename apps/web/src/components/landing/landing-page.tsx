@@ -953,14 +953,14 @@ function Questions() {
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] items-start gap-x-4 gap-y-2.5">
         {FAQ.map(({ q, a }) => (
           <details
-            className="rounded-[14px] border border-rl-line bg-rl-card"
+            className="rl-faq rounded-[14px] border border-rl-line bg-rl-card"
             key={q}
           >
             <summary className="flex min-h-6 cursor-pointer list-none items-center justify-between gap-4 px-[18px] py-4 font-semibold text-[15.5px] [&::-webkit-details-marker]:hidden">
               {q}
               <span
                 aria-hidden="true"
-                className="flex-none font-rl-mono text-rl-faint"
+                className="rl-faq-icon flex-none font-rl-mono text-rl-faint"
               >
                 +
               </span>
