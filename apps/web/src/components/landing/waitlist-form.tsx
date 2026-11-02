@@ -139,7 +139,7 @@ export function WaitlistForm({
       />
       <button
         className={cn(
-          "inline-flex min-h-[54px] cursor-pointer items-center gap-2.5 rounded-xl border-0 px-6 font-bold text-[17px] text-white disabled:cursor-wait disabled:opacity-70",
+          "rl-press inline-flex min-h-[54px] cursor-pointer items-center gap-2.5 rounded-xl border-0 px-6 font-bold text-[17px] text-white disabled:cursor-wait disabled:opacity-70",
           closing
             ? "bg-rl-sky-ink"
             : "bg-rl-accent shadow-[0_0_0_1px_var(--color-rl-accent),0_12px_40px_-14px_var(--color-rl-accent)]",
