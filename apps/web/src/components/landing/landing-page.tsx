@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FAQ, FEED, TONES, type Tone } from "./content";
 import isoCadence from "./iso-cadence.svg";
 import isoDomain from "./iso-domain.svg";
@@ -19,6 +19,28 @@ const anchor = "scroll-mt-6";
 // Hidden for now: no customer logos yet, and these pages don't exist yet.
 const SHOW_PROOF = false;
 const SHOW_FOOTER_LINKS = false;
+
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const { isIntersecting, target } of entries) {
+          if (!isIntersecting) continue;
+          target.setAttribute("data-visible", "");
+          observer.unobserve(target);
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px" },
+    );
+    const targets = ref.current?.querySelectorAll(".rl-reveal, .rl-stagger");
+    for (const target of targets ?? []) observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
+  return ref;
+}
 
 function Logo({ size }: { size: number }) {
   return <PixelArt cols={16} pixels={MASCOT} size={size} />;
@@ -197,7 +219,7 @@ function Step({
         {n}
       </span>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-center gap-x-12 gap-y-7">
-        <div className="flex flex-col gap-2.5">
+        <div className="rl-reveal flex flex-col gap-2.5">
           <span className="font-rl-pixel text-[11.5px] text-rl-faint uppercase">
             {time}
           </span>
@@ -250,7 +272,7 @@ function scoreColor(score: number) {
 
 function Feed() {
   return (
-    <div className="flex flex-col gap-1 rounded-2xl border border-rl-line bg-rl-card p-3">
+    <div className="rl-stagger flex flex-col gap-1 rounded-2xl border border-rl-line bg-rl-card p-3">
       {FEED.map(({ msg, score }) => (
         <div
           className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3.5 rounded-lg px-2.5 py-2 ${score > 6 ? "bg-rl-accent/8" : ""}`}
@@ -261,7 +283,7 @@ function Feed() {
           >
             {msg}
           </span>
-          <span className="hidden grid-cols-[repeat(12,6px)] gap-0.5 sm:grid">
+          <span className="rl-meter hidden grid-cols-[repeat(12,6px)] gap-0.5 sm:grid">
             {Array.from({ length: 12 }, (_, i) => (
               <span
                 className="h-[9px]"
@@ -297,7 +319,7 @@ function HowItWorks() {
       className={`mx-auto flex max-w-[1280px] flex-col gap-14 px-8 pt-[130px] pb-[60px] ${anchor}`}
       id="como"
     >
-      <div className="flex max-w-[820px] flex-col gap-[18px]">
+      <div className="rl-reveal flex max-w-[820px] flex-col gap-[18px]">
         <Eyebrow>01 · Como funciona</Eyebrow>
         <h2 className={`${h2} text-balance`}>
           De um merge na madrugada{" "}
@@ -313,13 +335,17 @@ function HowItWorks() {
           aria-hidden="true"
           className="absolute top-6 bottom-6 left-[19px] w-0.5 bg-[repeating-linear-gradient(180deg,#2E3039_0_6px,transparent_6px_12px)]"
         />
+        <span
+          aria-hidden="true"
+          className="rl-progress absolute top-6 bottom-6 left-[19px] w-0.5 bg-[repeating-linear-gradient(180deg,var(--color-rl-accent)_0_6px,transparent_6px_12px)]"
+        />
         <Step
           body="Ela acompanha a branch principal do repositório conectado. Mensagens, diffs e PRs já são o briefing."
           n={1}
           time="02:13 · o push"
           title="Alguém dá merge. Ninguém precisa avisar a Relay."
         >
-          <div className="flex flex-col overflow-hidden rounded-2xl border border-rl-line bg-rl-card px-5 py-[18px] font-rl-mono text-[13.5px] text-rl-soft leading-[1.8]">
+          <div className="rl-stagger flex flex-col overflow-hidden rounded-2xl border border-rl-line bg-rl-card px-5 py-[18px] font-rl-mono text-[13.5px] text-rl-soft leading-[1.8]">
             <span>
               <span className="text-rl-accent-light">$</span> git push origin
               main
@@ -350,7 +376,7 @@ function HowItWorks() {
           time="02:15 · a escrita"
           title="O commit vira benefício, no tom e com a marca do seu produto."
         >
-          <div className="flex flex-col gap-2.5 rounded-2xl border border-rl-line bg-rl-card p-3.5 font-rl-mono text-[13px]">
+          <div className="rl-stagger flex flex-col gap-2.5 rounded-2xl border border-rl-line bg-rl-card p-3.5 font-rl-mono text-[13px]">
             <DiffLine
               added="Exporte notas em PDF, com capa"
               removed="feat(export): PDF export with cover"
@@ -372,7 +398,7 @@ function HowItWorks() {
           time="sex · 10:00 · o envio"
           title="O que é sensível espera por você."
         >
-          <div className="flex flex-col gap-3.5 rounded-2xl border border-rl-accent bg-rl-card px-5 py-[18px] shadow-[0_0_60px_-30px_var(--color-rl-accent)]">
+          <div className="rl-reveal flex flex-col gap-3.5 rounded-2xl border border-rl-accent bg-rl-card [--rl-i:1] px-5 py-[18px] shadow-[0_0_60px_-30px_var(--color-rl-accent)]">
             <span className="inline-flex items-center gap-2 font-rl-pixel text-[11.5px] text-rl-accent-light uppercase">
               <span className="rl-blink size-[7px] bg-rl-accent" />
               aguardando você · expira em 2 dias
@@ -437,7 +463,7 @@ function EmailPreview() {
       className={`mx-auto flex max-w-[1280px] flex-col items-center gap-12 px-8 pt-20 pb-[130px] ${anchor}`}
       id="email"
     >
-      <div className="flex max-w-[760px] flex-col items-center gap-[18px] text-center">
+      <div className="rl-reveal flex max-w-[760px] flex-col items-center gap-[18px] text-center">
         <Eyebrow accent>02 · O email</Eyebrow>
         <h2 className={`${h2} text-balance`}>
           É isto que chega{" "}
@@ -468,7 +494,7 @@ function EmailPreview() {
       </div>
 
       <div className="grid w-full grid-cols-1 items-start gap-x-5 gap-y-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)_minmax(0,1fr)]">
-        <div className="order-2 flex flex-col gap-8 lg:order-none lg:gap-[110px] lg:pt-10">
+        <div className="rl-stagger order-2 flex flex-col gap-8 lg:order-none lg:gap-[110px] lg:pt-10">
           <Callout side="left" title="Remetente seu">
             Sai do seu domínio, verificado por DNS. Chega na caixa de entrada,
             não em promoções.
@@ -481,7 +507,7 @@ function EmailPreview() {
           </Callout>
         </div>
 
-        <div className="order-1 flex flex-col gap-3 rounded-[18px] bg-[#F3F1EC] p-4 text-[#16181D] shadow-[0_40px_80px_-40px_#000000] lg:order-none">
+        <div className="rl-reveal order-1 flex flex-col gap-3 rounded-[18px] bg-[#F3F1EC] p-4 text-[#16181D] shadow-[0_40px_80px_-40px_#000000] lg:order-none">
           <div className="flex flex-col gap-1 px-1.5 py-0.5 font-rl-mail text-[#5A5E66] text-[13px]">
             <div className="flex gap-2">
               <span className="w-14 flex-none">De</span>
@@ -552,7 +578,7 @@ function EmailPreview() {
           </div>
         </div>
 
-        <div className="order-3 flex flex-col gap-8 lg:order-none lg:gap-[110px] lg:pt-[150px]">
+        <div className="rl-stagger order-3 flex flex-col gap-8 lg:order-none lg:gap-[110px] lg:pt-[150px]">
           <Callout side="right" title="Sua marca">
             Logo, cor e assinatura do seu produto. A Relay não aparece.
           </Callout>
@@ -615,7 +641,7 @@ function BentoIso({
 }) {
   return (
     <div
-      className={`${card} flex flex-col gap-3 overflow-hidden px-[22px] py-5 ${className}`}
+      className={`${card} rl-reveal flex flex-col gap-3 overflow-hidden px-[22px] py-5 ${className}`}
     >
       <img
         alt={alt}
@@ -634,14 +660,14 @@ function Product() {
   const pre =
     "m-0 overflow-x-auto rounded-[10px] border border-rl-line bg-rl-ink px-3.5 py-3 font-rl-mono text-[12.5px] text-rl-soft leading-[1.6]";
   const green = "text-[#A9D7B9]";
-  const cell = `${card} flex flex-col justify-between gap-3.5 overflow-hidden px-[22px] py-5`;
+  const cell = `${card} rl-reveal flex flex-col justify-between gap-3.5 overflow-hidden px-[22px] py-5`;
 
   return (
     <section
       className={`mx-auto flex max-w-[1280px] flex-col gap-11 px-8 pt-[120px] pb-[60px] ${anchor}`}
       id="produto"
     >
-      <div className="flex max-w-[820px] flex-col gap-[18px]">
+      <div className="rl-reveal flex max-w-[820px] flex-col gap-[18px]">
         <Eyebrow>03 · Tudo num lugar só</Eyebrow>
         <h2 className={`${h2} text-balance`}>
           Um painel pequeno{" "}
@@ -673,7 +699,7 @@ function Product() {
         </BentoIso>
         <BentoIso
           alt="Um seletor rotativo de três posições sobre uma placa; o ponteiro aponta para a primeira posição, Direto."
-          className="min-[980px]:col-span-3"
+          className="[--rl-i:1] min-[980px]:col-span-3"
           maxWidth="max-w-[520px]"
           src={isoTone}
           title="Tom de voz"
@@ -691,7 +717,7 @@ function Product() {
           Sete casas, uma marcada. A edição sai no dia escolhido; sem novidade,
           o sino não toca.
         </BentoIso>
-        <div className={`${cell} min-[980px]:col-span-2`}>
+        <div className={`${cell} [--rl-i:1] min-[980px]:col-span-2`}>
           <BentoCopy title="Inscritos">
             CSV, lista colada ou API no seu cadastro. Quem cria conta já entra;
             quem sai, sai sozinho.
@@ -707,7 +733,7 @@ function Product() {
             Descadastros entram sozinhos. Nada de planilha.
           </span>
         </div>
-        <div className={`${cell} min-[980px]:col-span-2`}>
+        <div className={`${cell} [--rl-i:2] min-[980px]:col-span-2`}>
           <BentoCopy title="Sempre de fora">
             Suas regras, além do que a Relay já filtra. Por prefixo de commit ou
             por caminho no repositório.
@@ -810,7 +836,7 @@ function GetStarted() {
 
   return (
     <section className="mx-auto flex max-w-[1280px] flex-col gap-11 px-8 pt-[120px] pb-[60px]">
-      <div className="flex max-w-[820px] flex-col gap-[18px]">
+      <div className="rl-reveal flex max-w-[820px] flex-col gap-[18px]">
         <Eyebrow>04 · Começar</Eyebrow>
         <h2 className={`${h2} text-balance`}>
           Três conexões.{" "}
@@ -821,8 +847,8 @@ function GetStarted() {
           antes mesmo de você adicionar os inscritos.
         </p>
       </div>
-      <div className="flex flex-wrap overflow-hidden rounded-[20px] border border-rl-line bg-rl-card">
-        <ol className="m-0 flex flex-[1_1_360px] list-none flex-col gap-2 border-rl-line p-5 md:border-r">
+      <div className="rl-reveal flex flex-wrap overflow-hidden rounded-[20px] border border-rl-line bg-rl-card">
+        <ol className="rl-stagger m-0 flex flex-[1_1_360px] list-none flex-col gap-2 border-rl-line p-5 md:border-r">
           <SetupRow
             className="bg-rl-raised"
             detail="tinta-app/tinta · main"
@@ -917,7 +943,7 @@ function Questions() {
       className={`mx-auto flex max-w-[1280px] flex-col gap-11 px-8 pt-[120px] pb-[100px] ${anchor}`}
       id="perguntas"
     >
-      <div className="flex max-w-[820px] flex-col gap-[18px]">
+      <div className="rl-reveal flex max-w-[820px] flex-col gap-[18px]">
         <Eyebrow>Perguntas</Eyebrow>
         <h2 className={h2}>
           O que perguntam{" "}
@@ -1032,9 +1058,13 @@ type WaitlistProps = {
 
 export function LandingPage() {
   const [joinedEmail, onJoined] = useJoinedEmail();
+  const ref = useReveal();
 
   return (
-    <div className="rl-landing overflow-x-clip bg-rl-ink font-rl-body text-[17px] text-rl-fg leading-normal antialiased">
+    <div
+      className="rl-landing overflow-x-clip bg-rl-ink font-rl-body text-[17px] text-rl-fg leading-normal antialiased"
+      ref={ref}
+    >
       <Nav />
       <main>
         <Hero joinedEmail={joinedEmail} onJoined={onJoined} />
