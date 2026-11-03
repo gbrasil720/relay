@@ -1,26 +1,30 @@
+import { db } from "@relay/db";
+import { emailMessage } from "@relay/db/schema/email";
+import { ses } from "@relay/email";
 import { env } from "@relay/env/server";
+import { gte } from "drizzle-orm";
 import { adminProcedure, router } from "../../index";
 
 const DOMAIN = "userelay.site";
 const DAY = 24 * 60 * 60 * 1000;
-const RR_TYPE = { TXT: 16, MX: 15 } as const;
+const RR_TYPE = { TXT: 16, MX: 15, CNAME: 5 } as const;
 
-// `millionsend` is the live DKIM selector. SPF and MX sit on MillionSend's
-// return-path subdomain (default "send"); the apex has neither, by design.
+// SES Easy DKIM publishes three selectors; they're created together, so one stands in.
+// SPF and MX sit on the custom MAIL FROM subdomain; the apex has neither, by design.
 const RECORDS = [
   {
     key: "dkim",
     label: "DKIM",
-    name: `millionsend._domainkey.${DOMAIN}`,
-    type: "TXT",
-    valid: /\bp=[^;\s]/,
+    name: `s65rpadwgod42v4wi635bvwed6bbciep._domainkey.${DOMAIN}`,
+    type: "CNAME",
+    valid: /\.dkim\.amazonses\.com\.?$/,
   },
   {
     key: "spf",
     label: "SPF",
-    name: `send.${DOMAIN}`,
+    name: `bounce.${DOMAIN}`,
     type: "TXT",
-    valid: /^v=spf1\s/i,
+    valid: /^v=spf1\s.*include:amazonses\.com/i,
   },
   {
     key: "dmarc",
@@ -29,7 +33,13 @@ const RECORDS = [
     type: "TXT",
     valid: /^v=DMARC1\b/i,
   },
-  { key: "mx", label: "MX", name: `send.${DOMAIN}`, type: "MX", valid: /\S/ },
+  {
+    key: "mx",
+    label: "MX",
+    name: `bounce.${DOMAIN}`,
+    type: "MX",
+    valid: /feedback-smtp\.[a-z0-9-]+\.amazonses\.com/,
+  },
 ] as const;
 
 /** Record values, or null when the resolver couldn't answer. */
@@ -70,14 +80,7 @@ function checkRecords() {
 }
 
 // An email that was opened, clicked or complained about was delivered first.
-const DELIVERED = new Set([
-  "delivered",
-  "opened",
-  "clicked",
-  "complained",
-  "prefetched",
-]);
-const WAITING = new Set(["queued", "scheduled"]);
+const DELIVERED = new Set(["delivered", "opened", "clicked", "complained"]);
 
 function provider(to: string | undefined) {
   const domain = to?.split("@")[1]?.toLowerCase() ?? "";
@@ -90,16 +93,13 @@ function provider(to: string | undefined) {
 type Provider = ReturnType<typeof provider>;
 
 async function emailStats() {
-  // The client throws on import without a key.
-  if (!env.MILLIONSEND_API_KEY) return null;
-  const { millionsend } = await import("@relay/millionsend");
-
   const now = Date.now();
   const stats = {
     sent: 0,
     delivered: 0,
     bounced: 0,
     complained: 0,
+    // SES has no queue we can see: a send call either hands the email over or fails.
     waiting: 0,
     delayed: 0,
     days: Array.from({ length: 7 }, () => ({ delivered: 0, bounced: 0 })),
@@ -111,53 +111,57 @@ async function emailStats() {
     } satisfies Record<Provider, unknown>,
   };
 
-  // ponytail: stops at 2k emails in the window, undercounting past that;
-  // upgrade to storing webhook events if volume gets there.
-  let after: string | undefined;
-  for (let page = 0; page < 20; page++) {
-    const { data, error } = await millionsend.emails.list({
-      limit: 100,
-      after,
-    });
-    if (error) return null;
-    for (const email of data.data) {
-      const age = now - new Date(email.created_at).getTime();
-      if (age >= 7 * DAY) return stats;
-      if (WAITING.has(email.last_event)) {
-        stats.waiting++;
-        continue;
-      }
-      if (email.last_event === "canceled") continue;
+  const emails = await db
+    .select({
+      to: emailMessage.to,
+      status: emailMessage.status,
+      createdAt: emailMessage.createdAt,
+    })
+    .from(emailMessage)
+    .where(gte(emailMessage.createdAt, new Date(now - 7 * DAY)));
 
-      const day = stats.days[6 - Math.floor(age / DAY)];
-      const by = stats.providers[provider(email.to[0])];
-      stats.sent++;
-      by.sent++;
-      if (email.last_event === "delivery_delayed") stats.delayed++;
-      if (email.last_event === "complained") stats.complained++;
-      if (DELIVERED.has(email.last_event)) {
-        stats.delivered++;
-        by.delivered++;
-        if (day) day.delivered++;
-      }
-      if (email.last_event === "bounced") {
-        stats.bounced++;
-        by.bounced++;
-        if (day) day.bounced++;
-      }
+  for (const email of emails) {
+    const age = now - email.createdAt.getTime();
+    const day = stats.days[6 - Math.floor(age / DAY)];
+    const by = stats.providers[provider(email.to)];
+    stats.sent++;
+    by.sent++;
+    if (email.status === "delivery_delayed") stats.delayed++;
+    if (email.status === "complained") stats.complained++;
+    if (DELIVERED.has(email.status)) {
+      stats.delivered++;
+      by.delivered++;
+      if (day) day.delivered++;
     }
-    if (!data.has_more) break;
-    after = data.data.at(-1)?.id;
+    if (email.status === "bounced") {
+      stats.bounced++;
+      by.bounced++;
+      if (day) day.bounced++;
+    }
   }
   return stats;
 }
 
+// SES enforcement status, mapped onto the screen's band/guardrail labels.
+const ENFORCEMENT = {
+  HEALTHY: { band: "good", guardrail: "ok" },
+  PROBATION: { band: "at_risk", guardrail: "warning" },
+  SHUTDOWN: { band: "at_risk", guardrail: "paused" },
+} as const;
+
 async function reputation() {
-  if (!env.MILLIONSEND_API_KEY) return null;
-  const { millionsend } = await import("@relay/millionsend");
-  const { data, error } = await millionsend.deliverability.get();
-  if (error) return null;
-  return { band: data.band, guardrail: data.guardrail_status };
+  if (!env.AWS_ACCESS_KEY_ID) return null;
+  try {
+    const account = await ses<{
+      EnforcementStatus: keyof typeof ENFORCEMENT;
+      SendingEnabled: boolean;
+    }>("account");
+    if (!account.SendingEnabled) return ENFORCEMENT.SHUTDOWN;
+    return ENFORCEMENT[account.EnforcementStatus] ?? null;
+  } catch (error) {
+    console.error("SES account lookup failed", error);
+    return null;
+  }
 }
 
 export const deliverabilityRouter = router({
