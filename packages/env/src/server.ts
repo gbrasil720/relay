@@ -37,15 +37,17 @@ export const env = createEnv({
           .map((email) => email.trim().toLowerCase())
           .filter(Boolean),
       ),
-    MILLIONSEND_API_KEY: z.string().min(1).optional(),
-    MILLIONSEND_BASE_URL: z.url().default("https://api.millionsend.com"),
+    // IAM user limited to ses:SendEmail and ses:GetAccount. Unset, nothing is emailed.
+    AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
+    AWS_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+    AWS_REGION: z.string().min(1).default("us-east-1"),
+    // Publishes SES events to SNS, which posts them to /webhooks/ses.
+    SES_CONFIGURATION_SET: z.string().min(1).default("relay-default"),
+    // Only notifications from this topic are accepted at /webhooks/ses.
+    SES_EVENTS_TOPIC_ARN: z.string().min(1).optional(),
+    EMAIL_FROM: z.string().min(1).default("Relay <ola@userelay.site>"),
     // Where invite links lead. Unset, invites are refused: signup is not open yet.
     INVITE_SIGNUP_URL: z.url().optional(),
-    // Placeholder only; replace with a verified sender before sending.
-    MILLIONSEND_FROM_EMAIL: z
-      .string()
-      .min(1)
-      .default("Acme <noreply@example.com>"),
   },
   runtimeEnv: process.env,
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

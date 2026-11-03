@@ -1,4 +1,5 @@
 import { db } from "@relay/db";
+import { sendEmail } from "@relay/email";
 import { adminSetting, inviteBatch, waitlist } from "@relay/db/schema/waitlist";
 import { env } from "@relay/env/server";
 import { TRPCError } from "@trpc/server";
@@ -38,10 +39,10 @@ function signupUrl() {
         "Signup ainda não abriu: defina INVITE_SIGNUP_URL para enviar convites.",
     });
   }
-  if (!env.MILLIONSEND_API_KEY) {
+  if (!env.AWS_ACCESS_KEY_ID) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: "Defina MILLIONSEND_API_KEY para enviar convites.",
+      message: "Defina AWS_ACCESS_KEY_ID para enviar convites.",
     });
   }
   return env.INVITE_SIGNUP_URL;
@@ -97,8 +98,6 @@ export abstract class InviteService {
         }),
     ]);
 
-    // Imported here because the client throws at load without an API key.
-    const { sendEmail } = await import("@relay/millionsend");
     const failed: string[] = [];
     for (const row of claimed) {
       const inviteUrl = new URL(baseUrl);
@@ -113,7 +112,6 @@ export abstract class InviteService {
             message,
           }),
           replyTo: CONTACT_EMAIL,
-          idempotencyKey: `invite/${row.id}/${row.inviteCode}`,
         });
       } catch (error) {
         console.error("Invite email failed", row.id, error);

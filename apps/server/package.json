@@ -16,7 +16,7 @@
     "@relay/api": "workspace:*",
     "@relay/auth": "workspace:*",
     "@relay/db": "workspace:*",
-    "@relay/millionsend": "workspace:*",
+    "@relay/email": "workspace:*",
     "elysia": "catalog:",
     "@elysiajs/cors": "^1.4.2",
     "@sinclair/typebox": "^0.34.49",

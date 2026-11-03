@@ -1,4 +1,5 @@
 import { db } from "@relay/db";
+import { sendEmail } from "@relay/email";
 import { waitlist } from "@relay/db/schema/waitlist";
 import { env } from "@relay/env/server";
 import { CONTACT_EMAIL, waitlistEmail } from "./email";
@@ -17,7 +18,7 @@ export abstract class WaitlistService {
     // Not awaited: send time would otherwise tell new emails from repeated ones.
     if (row) {
       defer(
-        WaitlistService.confirm(row.id, input.email).catch((error) => {
+        WaitlistService.confirm(input.email).catch((error) => {
           console.error("Waitlist confirmation failed", error);
         }),
       );
@@ -26,18 +27,15 @@ export abstract class WaitlistService {
     return { ok: true };
   }
 
-  private static async confirm(id: string, to: string) {
-    if (!env.MILLIONSEND_API_KEY) return;
+  private static async confirm(to: string) {
+    if (!env.AWS_ACCESS_KEY_ID) return;
 
-    // Imported here because the client throws at load without an API key.
-    const { sendEmail } = await import("@relay/millionsend");
     const position = await db.$count(waitlist);
     const email = waitlistEmail({ position, siteUrl: env.CORS_ORIGIN });
     await sendEmail({
       to,
       ...email,
       replyTo: CONTACT_EMAIL,
-      idempotencyKey: `waitlist/${id}`,
     });
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@relay/millionsend",
+  "name": "@relay/email",
   "type": "module",
   "exports": {
     ".": {
@@ -15,7 +15,8 @@
     "@relay/config": "workspace:*"
   },
   "dependencies": {
-    "millionsend": "^0.10.0",
-    "@relay/env": "workspace:*"
+    "@relay/db": "workspace:*",
+    "@relay/env": "workspace:*",
+    "aws4fetch": "^1.0.20"
   }
 }

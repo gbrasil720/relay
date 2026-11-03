@@ -6,7 +6,7 @@ This project was created with [kubojs](https://github.com/albuquerquesz/kubo), a
 
 - **TypeScript** - For type safety and improved developer experience
 - **Himetrica** - Browser analytics, error tracking, and Web Vitals
-- **MillionSend** - Cloud or self-hosted email via packages/millionsend
+- **Amazon SES** - Email via packages/email
 - **TanStack Router** - File-based routing with full type safety
 - **TailwindCSS** - Utility-first CSS for rapid UI development
 - **Shared UI package** - shadcn/ui primitives live in `packages/ui`
@@ -54,32 +54,18 @@ This project includes the [Himetrica TypeScript tracker](https://www.himetrica.c
 The generated integration is browser-only. Keep Himetrica secret keys out of client projects and use the Himetrica Server API from a server-only module for trusted backend events.
 
 
-## MillionSend Setup
+## Email (Amazon SES)
 
-This project includes the official [MillionSend TypeScript SDK](https://github.com/MillionSend/millionsend-node) through `packages/millionsend`.
+`packages/email` sends through the SESv2 API (us-east-1) and logs each email in `email_message`.
 
-1. Set `MILLIONSEND_API_KEY` (`ms_...`) in `apps/server/.env` **before importing the client**. The SDK creates the client once and throws if the key is missing.
-2. Replace `MILLIONSEND_FROM_EMAIL` with a verified domain sender. The generated `noreply@example.com` address is a placeholder.
-3. Cloud uses `https://api.millionsend.com`. For self-hosting, set `MILLIONSEND_BASE_URL` to your API origin. Loopback HTTP is allowed; other plain HTTP origins require explicitly changing the client's SDK options to `allowInsecureHttp: true`. HTTPS is recommended.
-
-
+1. Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (IAM user limited to `ses:SendEmail` and `ses:GetAccount`). Unset, nothing is emailed.
+2. SES events go configuration set `relay-default` → SNS topic → `POST /webhooks/ses`. Set `SES_EVENTS_TOPIC_ARN` to that topic; other topics are refused.
 
 ```ts
-import { millionsend, sendEmail } from "@relay/millionsend";
+import { sendEmail } from "@relay/email";
 
-await sendEmail({
-  to: "user@example.com",
-  subject: "Hello",
-  html: "<strong>It works!</strong>",
-  idempotencyKey: "welcome/user-123",
-});
-
-// The complete SDK is available, including received mail and inboxes.
-const { data, error } = await millionsend.emails.receiving.list({ inboxId: "your-inbox-id" });
+await sendEmail({ to: "user@example.com", subject: "Hello", html: "<strong>It works!</strong>" });
 ```
-
-Reuse an idempotency key for retries of the same send. The helper returns the sent data and throws on SDK errors; the raw client returns `{ data, error }`.
-
 
 Then, run the development server:
 
