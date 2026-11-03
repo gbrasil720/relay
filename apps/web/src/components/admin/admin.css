@@ -5,12 +5,132 @@
   }
 }
 
+.rl-admin {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .rl-admin a {
   color: #eeeff2;
 }
 
-.rl-admin a:hover {
-  color: #ffffff;
+/* Touch fakes :hover on tap and leaves it stuck; only a mouse gets it. */
+@media (hover: hover) and (pointer: fine) {
+  .rl-admin a:hover {
+    color: #ffffff;
+  }
+}
+
+/* No double-tap zoom wait, and long-press doesn't select a control's label. */
+.rl-admin a,
+.rl-admin button,
+.rl-admin select,
+.rl-admin [role="button"] {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* iOS zooms into any field under 16px and never zooms back out. */
+@media (pointer: coarse) {
+  .rl-admin input,
+  .rl-admin textarea,
+  .rl-admin select {
+    font-size: 16px !important;
+  }
+}
+
+/* The screens are laid out for a 1440px artboard in inline styles, hence !important. */
+@media (max-width: 860px) {
+  .rl-admin-body {
+    flex-direction: column;
+  }
+
+  /* The sidebar becomes a top bar: brand and sign-out, then a scrolling row of links. */
+  .rl-admin-nav {
+    flex: none !important;
+    flex-flow: row wrap !important;
+    align-items: center;
+    gap: 8px !important;
+    padding: 10px 16px 0 !important;
+    border-right: 0 !important;
+    border-bottom: 1px solid #ffffff0f;
+    background: #0e0f13 !important;
+  }
+
+  .rl-admin-brand {
+    padding: 4px 0 !important;
+  }
+
+  .rl-admin-landing,
+  .rl-admin-status,
+  .rl-admin-who {
+    display: none !important;
+  }
+
+  .rl-admin-foot {
+    margin: 0 0 0 auto !important;
+  }
+
+  .rl-admin-foot > div {
+    padding: 0 !important;
+  }
+
+  .rl-admin-links {
+    order: 1;
+    flex: 1 0 100% !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    margin: 0 -16px;
+    padding: 0 16px 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .rl-admin-links > a {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .rl-admin main > header {
+    flex-wrap: wrap;
+    padding: 14px 16px !important;
+  }
+
+  .rl-admin main > header + div {
+    padding: 20px 16px 96px !important;
+  }
+
+  .rl-admin main aside {
+    max-width: none !important;
+    flex-basis: 100% !important;
+  }
+
+  /* Table rows keep their columns and the table scrolls sideways instead of crushing them. */
+  .rl-admin main :has(> li[style*="grid-template-columns"]) {
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+  }
+
+  /* Tables are the rows with fixed px columns after the flexible one; activity rows end in auto. */
+  .rl-admin main li[style*="fr) "][style*="px"]:not([style*="fr) auto"]) {
+    min-width: 760px;
+  }
+
+  .rl-admin main [style*="repeat(5,"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .rl-admin main [style*="150px minmax"] {
+    grid-template-columns: 96px minmax(0, 1fr) 32px 40px !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .rl-admin main [style*="repeat(2,"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 }
 
 /* The design's 30px menu column holds a 44px button; it overflows into the gap. */

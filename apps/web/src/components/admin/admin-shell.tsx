@@ -99,7 +99,7 @@ export function AdminShell() {
         fontSize: "15px",
         lineHeight: "1.5",
         WebkitFontSmoothing: "antialiased",
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -115,6 +115,7 @@ export function AdminShell() {
         }}
       />
       <div
+        className="rl-admin-body"
         style={{
           display: "flex",
           flex: "1",
@@ -123,15 +124,15 @@ export function AdminShell() {
         }}
       >
         <StripField className="opacity-50" />
-        <nav aria-label="Painel interno" style={{ position: "relative", zIndex: "1", flex: "0 0 248px", borderRight: "1px solid #FFFFFF0F", padding: "18px 14px 20px", display: "flex", flexDirection: "column", gap: "20px", boxSizing: "border-box", background: "linear-gradient(180deg, #0E0F13 0%, #0E0F13 72%, #0E0F13B3 100%)" }}>
-          <Link to="/admin" aria-label="Relay interno" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", padding: "4px 8px", fontFamily: "'Bricolage Grotesque', ui-sans-serif, sans-serif", fontWeight: "800", fontSize: "20px", letterSpacing: "-0.045em" }}>
+        <nav aria-label="Painel interno" className="rl-admin-nav" style={{ position: "relative", zIndex: "1", flex: "0 0 248px", borderRight: "1px solid #FFFFFF0F", padding: "18px 14px 20px", display: "flex", flexDirection: "column", gap: "20px", boxSizing: "border-box", background: "linear-gradient(180deg, #0E0F13 0%, #0E0F13 72%, #0E0F13B3 100%)" }}>
+          <Link to="/admin" aria-label="Relay interno" className="rl-admin-brand" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", padding: "4px 8px", fontFamily: "'Bricolage Grotesque', ui-sans-serif, sans-serif", fontWeight: "800", fontSize: "20px", letterSpacing: "-0.045em" }}>
             <PixelArt cols={16} pixels={MASCOT} size={2} />
             relay
             <span style={{ fontFamily: "'Silkscreen', ui-monospace, monospace", fontSize: "10px", fontWeight: "400", textTransform: "uppercase", color: "#DC6F81", border: "1px solid #C81E3A66", borderRadius: "5px", padding: "3px 6px", letterSpacing: ".04em", marginLeft: "2px" }}>
               interno
             </span>
           </Link>
-          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+          <div className="rl-admin-links" style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
             <NavItem label="Visão geral" to="/admin">
 <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true" style={{ flex: "none" }}>
                 <path d="M3.5 9.5 10 4l6.5 5.5V16.5h-13z" />
@@ -174,7 +175,7 @@ export function AdminShell() {
               </svg>
 </NavItem>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div className="rl-admin-landing" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <span style={{ fontFamily: "'Silkscreen', ui-monospace, monospace", fontSize: "10px", textTransform: "uppercase", color: "#6E717C", padding: "0 10px" }}>
               Landing
             </span>
@@ -192,8 +193,8 @@ export function AdminShell() {
               </span>
             </div>
           </div>
-          <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: "12px", borderRadius: "12px", background: "#0C0C0ECC", border: "1px solid #24262E" }}>
+          <div className="rl-admin-foot" style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div className="rl-admin-status" style={{ display: "flex", flexDirection: "column", gap: "6px", padding: "12px", borderRadius: "12px", background: "#0C0C0ECC", border: "1px solid #24262E" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: "'Silkscreen', ui-monospace, monospace", fontSize: "10.5px", textTransform: "uppercase", color: "#6BD49A" }}>
                 <span style={{ width: "6px", height: "6px", background: "#6BD49A" }} />
                 tudo operando
@@ -206,7 +207,7 @@ export function AdminShell() {
               <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#24262E", display: "grid", placeItems: "center", fontSize: "12px", fontWeight: "600" }}>
                 {initial}
               </span>
-              <span style={{ display: "flex", flexDirection: "column", lineHeight: "1.25", flex: "1" }}>
+              <span className="rl-admin-who" style={{ display: "flex", flexDirection: "column", lineHeight: "1.25", flex: "1" }}>
                 <span>
                   {name}
                 </span>
@@ -214,7 +215,7 @@ export function AdminShell() {
                   admin · userelay.site
                 </span>
               </span>
-              <button aria-label="Sair" onClick={signOut} style={{ all: "unset", cursor: "pointer", display: "flex" }} type="button">
+              <button aria-label="Sair" onClick={signOut} style={{ all: "unset", cursor: "pointer", display: "flex", minWidth: "44px", minHeight: "44px", alignItems: "center", justifyContent: "center" }} type="button">
 <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true" style={{ color: "#A3A6B0", flex: "none" }}>
                 <path d="M8 3.5H4.5v13H8" />
                 <path d="M11 6.5 14.5 10 11 13.5M7.5 10h7" />
