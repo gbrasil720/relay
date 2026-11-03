@@ -1,4 +1,5 @@
 import { createContext } from "@relay/api/context";
+import { handleSesWebhook } from "@relay/api/modules/ses/webhook";
 import { appRouter } from "@relay/api/routers/index";
 import { auth } from "@relay/auth";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
@@ -15,6 +16,7 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
     if (url.pathname.startsWith("/api/auth/")) return auth.handler(request);
+    if (url.pathname === "/webhooks/ses") return handleSesWebhook(request);
     if (url.pathname.startsWith("/trpc/")) {
       return fetchRequestHandler({
         endpoint: "/trpc",

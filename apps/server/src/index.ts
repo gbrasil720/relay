@@ -1,5 +1,6 @@
 import { cors } from "@elysiajs/cors";
 import { createContext } from "@relay/api/context";
+import { handleSesWebhook } from "@relay/api/modules/ses/webhook";
 import { appRouter } from "@relay/api/routers/index";
 import { auth } from "@relay/auth";
 import { env } from "@relay/env/server";
@@ -32,6 +33,7 @@ const app = new Elysia()
     });
     return res;
   })
+  .post("/webhooks/ses", ({ request }) => handleSesWebhook(request))
   .get("/", () => "OK")
   .listen(Number(process.env.PORT ?? 3000), () => {
     console.log("Server is running on http://localhost:3000");
