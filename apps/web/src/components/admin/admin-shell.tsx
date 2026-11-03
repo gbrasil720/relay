@@ -63,11 +63,11 @@ function NavItem({
   );
 }
 
-/** "sáb · 1 nov · 10:42 · próximo lote: sex 7 nov", shown in every screen header. */
+/** "sáb · 1 nov · 10:42 · lote planejado: sex 7 nov", shown in every screen header. */
 export function useAdminSubtitle() {
   const shell = useQuery(trpc.admin.shell.queryOptions());
   const next = shell.data?.nextBatchAt;
-  return `${headerNow()} · próximo lote: ${next ? batchDate(next) : "—"}`;
+  return `${headerNow()} · lote planejado: ${next ? batchDate(next) : "—"}`;
 }
 
 export function AdminShell() {

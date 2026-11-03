@@ -93,7 +93,7 @@ export const overviewRouter = router({
         ? [
             {
               title: `${plural(unreminded, "convite", "convites")} sem abrir há ${rules.reminderDay} dias`,
-              detail: "lembrete ainda não enviado",
+              detail: "nenhum lembrete sai sozinho",
               action: "ver" as const,
             },
           ]

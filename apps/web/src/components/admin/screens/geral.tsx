@@ -32,7 +32,7 @@ export function AdminGeral() {
         `Na fila: ${d.counts.queued}`,
         `Convidados: ${d.counts.invited}`,
         `Criaram conta: ${d.counts.redeemed}`,
-        `Próximo lote: ${batchDate(d.nextBatchAt)} · ${d.rulesSize}`,
+        `Lote planejado: ${batchDate(d.nextBatchAt)} · ${d.rulesSize}`,
       ].join("\n"),
     );
   }
@@ -112,7 +112,7 @@ export function AdminGeral() {
                   {d?.counts.queued ?? "—"}
                 </span>
                 <span style={{ fontSize: "13px", color: "#868994" }}>
-                  {"na waitlist · próximo lote "}
+                  {"na waitlist · lote planejado "}
                   {d ? batchDate(d.nextBatchAt).split(" ")[0] : "—"}
                 </span>
               </div>
@@ -266,7 +266,7 @@ export function AdminGeral() {
                   waitlist · landing
                 </span>
                 <span>
-                  Próximo lote
+                  Lote planejado
                 </span>
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "12.5px", color: "#EEEFF2" }}>
                   {d ? `${batchDate(d.nextBatchAt)} · ${d.rulesSize}` : "—"}

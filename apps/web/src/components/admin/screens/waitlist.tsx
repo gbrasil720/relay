@@ -221,7 +221,7 @@ export function AdminWaitlist() {
               Waitlist
             </h1>
             <p style={{ margin: "0", fontSize: "15px", color: "#A3A6B0" }}>
-              {s ? `${s.counts.queued} ${s.counts.queued === 1 ? "pessoa" : "pessoas"} na fila. Convidamos em ordem de chegada, prioridade na frente — ${s.rules.size} por lote, às ${WEEKDAYS_PLURAL[s.rules.weekday]}.` : "—"}
+              {s ? `${s.counts.queued} ${s.counts.queued === 1 ? "pessoa" : "pessoas"} na fila. Convidamos em ordem de chegada, prioridade na frente — ${s.rules.size} por lote, enviado à mão às ${WEEKDAYS_PLURAL[s.rules.weekday]}.` : "—"}
             </p>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -246,7 +246,7 @@ export function AdminWaitlist() {
               <span style={{ display: "flex", flexDirection: "column", lineHeight: "1.15" }}>
                 Convidar próximos {s?.next.count ?? "—"}
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "11.5px", fontWeight: "400", opacity: ".8" }}>
-                  {nextDay} · ou agora
+                  planejado {nextDay}
                 </span>
               </span>
             </a>
@@ -487,8 +487,7 @@ export function AdminWaitlist() {
                   Próximo lote
                 </span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Silkscreen', ui-monospace, monospace", fontSize: "10px", textTransform: "uppercase", color: "#DC6F81" }}>
-                  <span style={{ width: "6px", height: "6px", background: "#C81E3A", animation: "rl-blink 1.2s steps(1) infinite" }} />
-                  {s ? `${nextDay} · ${clock(s.next.at)}` : "—"}
+                  {s ? `planejado ${nextDay} · ${clock(s.next.at)}` : "—"}
                 </span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", gap: "8px 14px", fontSize: "13px", color: "#868994", alignItems: "center" }}>
@@ -514,7 +513,7 @@ export function AdminWaitlist() {
                   Validade
                 </span>
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "12.5px", color: "#EEEFF2" }}>
-                  {s ? `${s.rules.validityDays} dias · lembrete no ${s.rules.reminderDay}º` : "—"}
+                  {s ? `${s.rules.validityDays} dias · alerta no ${s.rules.reminderDay}º` : "—"}
                 </span>
               </div>
               <span aria-hidden="true" style={{ display: "grid", gridTemplateColumns: `repeat(${s?.rules.size ?? 25}, minmax(0, 1fr))`, gap: "2px", height: "8px" }}>
@@ -558,7 +557,7 @@ export function AdminWaitlist() {
                   Não abriram
                 </span>
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "12.5px", color: "#EEEFF2" }}>
-                  {s?.counts.notOpened ?? 0} · lembrete automático no {s?.rules.reminderDay ?? "—"}º dia
+                  {s?.counts.notOpened ?? 0} · alerta no painel no {s?.rules.reminderDay ?? "—"}º dia
                 </span>
                 <span>
                   Abriram, não criaram

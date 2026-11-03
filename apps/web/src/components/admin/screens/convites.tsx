@@ -11,7 +11,7 @@ import { adminActions, batchDay, downloadCsv, inviteActions, previewInvite, rank
 const WEEKDAYS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 
 const BATCH_STATUS = {
-  scheduled: { label: "agendado", color: "#DC6F81" },
+  planned: { label: "planejado", color: "#DC6F81" },
   open: { label: "em aberto", color: "#E0B341" },
   closed: { label: "fechado", color: "#6E717C" },
 };
@@ -77,7 +77,7 @@ export function AdminConvites() {
             sent: "—",
             opened: "—",
             accounts: "—",
-            status: BATCH_STATUS.scheduled,
+            status: BATCH_STATUS.planned,
           },
         ]
       : []),
@@ -134,7 +134,7 @@ export function AdminConvites() {
               Convites
             </h1>
             <p style={{ margin: "0", fontSize: "15px", color: "#A3A6B0" }}>
-              {sent} enviados, {s?.counts.redeemed ?? 0} viraram conta. Lote a lote, com lembrete e segunda chance.
+              {sent} enviados, {s?.counts.redeemed ?? 0} viraram conta. Lote a lote, sempre enviado à mão, com segunda chance.
             </p>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -153,7 +153,7 @@ export function AdminConvites() {
               <span style={{ display: "flex", flexDirection: "column", lineHeight: "1.15" }}>
                 Convidar próximos {s?.next.count ?? "—"}
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "11.5px", fontWeight: "400", opacity: ".8" }}>
-                  {s ? batchDay(s.next.at) : "—"}
+                  {s ? `planejado ${batchDay(s.next.at)}` : "—"}
                 </span>
               </span>
             </a>
@@ -289,7 +289,7 @@ export function AdminConvites() {
                   {draft ? numberRule("size", "Tamanho do lote") : `${r?.size ?? "—"} por lote`}
                 </span>
                 <span>
-                  Dia
+                  Planejado
                 </span>
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "12.5px", color: "#EEEFF2" }}>
                   {draft ? (
@@ -322,10 +322,10 @@ export function AdminConvites() {
                   {draft ? numberRule("validityDays", "Validade em dias") : `${r?.validityDays ?? "—"} dias`}
                 </span>
                 <span>
-                  Lembrete
+                  Alerta
                 </span>
                 <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: "12.5px", color: "#EEEFF2" }}>
-                  {draft ? numberRule("reminderDay", "Dia do lembrete") : `${r?.reminderDay ?? "—"}º dia, se não abriu`}
+                  {draft ? numberRule("reminderDay", "Dia do lembrete") : `${r?.reminderDay ?? "—"}º dia sem abrir, no painel`}
                 </span>
                 <span>
                   Expirou
@@ -334,6 +334,9 @@ export function AdminConvites() {
                   volta para a fila com prioridade
                 </span>
               </div>
+              <span style={{ fontSize: "12.5px", color: "#868994" }}>
+                Nada sai sozinho: o lote só é enviado quando você clica em Convidar.
+              </span>
               <button onClick={saveRules} type="button" style={{ font: "inherit", fontSize: "13px", color: "#EEEFF2", background: "transparent", border: "1px solid #2E3039", borderRadius: "9px", minHeight: "36px", padding: "0 12px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
                 <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true" style={{ color: "#EEEFF2", flex: "none" }}>
                   <path d="M3 6h14M3 10h14M3 14h14" />
@@ -398,7 +401,7 @@ export function AdminConvites() {
               </div>
             </div>
             <a href="#" onClick={previewInvite} style={{ fontSize: "13px", color: "#A3A6B0", textDecoration: "none", padding: "0 4px" }}>
-              {"Email \"Seu convite chegou\" e o lembrete →"}
+              {"Email \"Seu convite chegou\" →"}
             </a>
           </aside>
         </div>
