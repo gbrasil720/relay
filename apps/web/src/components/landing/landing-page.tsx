@@ -1,17 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { FAQ, FEED, TONES, type Tone } from "./content";
-import isoCadence from "./iso-cadence.svg";
-import isoDomain from "./iso-domain.svg";
-import isoTone from "./iso-tone.svg";
 import { HeroField, PixelArt, SkyField } from "./pixel-art";
 import { GLYPH, MASCOT } from "./pixels";
 import { useJoinedEmail, WaitlistForm } from "./waitlist-form";
 
 const h2 =
   "m-0 font-light font-rl-display text-[clamp(40px,5vw,70px)] leading-[0.98] tracking-[-0.05em]";
-const card = "rounded-[18px] border border-rl-line bg-rl-card";
 const chip =
   "rounded-md border border-rl-edge bg-rl-chip px-[9px] py-[5px] text-rl-fg";
 const anchor = "scroll-mt-6";
@@ -605,189 +601,871 @@ function EmailPreview() {
   );
 }
 
-function BentoCopy({
+const ICONS = {
+  home: (
+    <>
+      <path d="M3.5 9.5 10 4l6.5 5.5V16.5h-13z" />
+      <rect
+        fill="currentColor"
+        height="2.5"
+        stroke="none"
+        width="2.5"
+        x="8.75"
+        y="11.5"
+      />
+    </>
+  ),
+  mail: (
+    <>
+      <rect height="10.5" width="14" x="3" y="5" />
+      <path d="m3 6 7 5.5L17 6" />
+    </>
+  ),
+  changes: (
+    <>
+      <path d="M2.5 10h4.75M12.75 10h4.75" />
+      <rect height="5.5" width="5.5" x="7.25" y="7.25" />
+    </>
+  ),
+  people: (
+    <>
+      <circle cx="8" cy="7" r="2.75" />
+      <path d="M3 16.5a5 5 0 0 1 10 0" />
+      <path d="M13.5 4.5a2.75 2.75 0 0 1 0 5.5M15 11.5a4.5 4.5 0 0 1 2.5 5" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M3.5 3.5h6l7 7-6 6-7-7z" />
+      <rect
+        fill="currentColor"
+        height="2"
+        stroke="none"
+        width="2"
+        x="6"
+        y="6"
+      />
+    </>
+  ),
+  bolt: <path d="M11 3 5 11.5h4.5L9 17l6-8.5h-4.5z" />,
+  agent: (
+    <>
+      <rect height="9" width="12" x="4" y="7.5" />
+      <path d="M10 4v3.5M7.5 16.5v1.5M12.5 16.5v1.5" />
+      <rect
+        fill="currentColor"
+        height="2"
+        stroke="none"
+        width="2"
+        x="7"
+        y="10.5"
+      />
+      <rect
+        fill="currentColor"
+        height="2"
+        stroke="none"
+        width="2"
+        x="11"
+        y="10.5"
+      />
+    </>
+  ),
+};
+
+type IconName = keyof typeof ICONS;
+
+function Icon({ name, size }: { name: IconName; size: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="flex-none"
+      fill="none"
+      height={size}
+      stroke="currentColor"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      strokeWidth="1.6"
+      viewBox="0 0 20 20"
+      width={size}
+    >
+      {ICONS[name]}
+    </svg>
+  );
+}
+
+const VIEWS = [
+  {
+    id: "inicio",
+    icon: "home",
+    path: "inicio",
+    title: "Uma coisa para decidir",
+    body: "O Início mostra a edição que espera você — e só ela. Aprovar leva um clique; nada sai sem ele.",
+  },
+  {
+    id: "mudancas",
+    icon: "changes",
+    path: "mudancas",
+    title: "Mudanças já triadas",
+    body: 'Cada commit ganha uma nota de 0 a 12. Novidade entra, trabalho interno fica, dúvida vira "você decide".',
+  },
+  {
+    id: "inscritos",
+    icon: "people",
+    path: "inscritos",
+    title: "Inscritos sem planilha",
+    body: "Formulário, CSV ou API. Bounces e saídas tratados sozinhos; abertura e cliques por edição.",
+  },
+  {
+    id: "ritmo",
+    icon: "bolt",
+    path: "edicoes/ritmo",
+    title: "Ritmo que cabe no plano",
+    body: "Semanal, quinzenal ou quando acumular. Regras que seguram crédito quando não vale a pena mandar.",
+  },
+  {
+    id: "agentes",
+    icon: "agent",
+    path: "agentes",
+    title: "Agentes e MCP",
+    body: "Seu agente lê, rascunha e, se você deixar, aprova — de dentro do Claude Code ou do Cursor.",
+  },
+] as const satisfies readonly {
+  id: string;
+  icon: IconName;
+  path: string;
+  title: string;
+  body: string;
+}[];
+
+type ViewId = (typeof VIEWS)[number]["id"];
+
+const NAV: {
+  label: string;
+  icon: IconName;
+  view?: ViewId;
+  meta?: ReactNode;
+}[] = [
+  { label: "Início", icon: "home", view: "inicio" },
+  {
+    label: "Edições",
+    icon: "mail",
+    view: "ritmo",
+    meta: (
+      <span className="rounded-[3px] bg-rl-accent px-[5px] py-px font-rl-pixel text-[9px] text-white">
+        1
+      </span>
+    ),
+  },
+  { label: "Mudanças", icon: "changes", view: "mudancas", meta: "5 novas" },
+  { label: "Inscritos", icon: "people", view: "inscritos", meta: "1.284" },
+  { label: "Marca e envio", icon: "tag" },
+  { label: "Agentes e MCP", icon: "agent", view: "agentes" },
+];
+
+// Three rows of 72, read off the design: the window's pixel hem.
+const HEM =
+  "101010101010101010101010101010101010101010101010101010101010101010101010" +
+  "010101010101010101010101010101010101010101010101010101010101010101010110" +
+  "111011101110111011101110111011101110111011101110111011101110111011101110";
+
+function Meter({
+  score,
+  cell = "4px",
+  height = "h-[7px]",
+}: {
+  score: number;
+  cell?: string;
+  height?: string;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className="grid gap-0.5"
+      style={{ gridTemplateColumns: `repeat(12, ${cell})` }}
+    >
+      {Array.from({ length: 12 }, (_, i) => (
+        <span
+          className={height}
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length meter
+          key={i}
+          style={{ background: i < score ? scoreColor(score) : "#1E2027" }}
+        />
+      ))}
+    </span>
+  );
+}
+
+function PaneHead({
   title,
   children,
 }: {
-  title: string;
+  title: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <strong className="font-bold font-rl-display text-[18px] tracking-[-0.03em]">
+    <div className="rl-swap flex flex-col gap-1">
+      <span className="font-light font-rl-display text-[26px] leading-none tracking-[-0.045em]">
         {title}
-      </strong>
-      <span className="text-rl-dim text-[14px] leading-normal">{children}</span>
+      </span>
+      <span className="text-[12.5px] text-rl-dim">{children}</span>
     </div>
   );
 }
 
-function BentoIso({
-  src,
-  alt,
-  className,
-  maxWidth,
-  title,
-  children,
-  footer,
-}: {
-  src: string;
-  alt: string;
-  className: string;
-  maxWidth: string;
-  title: string;
-  children: ReactNode;
-  footer?: ReactNode;
-}) {
+const pane = "rl-swap rounded-[14px] border border-rl-line bg-rl-card";
+const stat = "rl-swap grid grid-cols-3 gap-2.5";
+const statCard =
+  "flex flex-col gap-0.5 rounded-[10px] border border-rl-line bg-rl-card px-3.5 py-3";
+const statNum = "font-extrabold font-rl-display text-[20px] tracking-[-0.04em]";
+const statLabel = "text-[11px] text-rl-faint";
+const pixelTag = "font-rl-pixel text-[9px] uppercase";
+
+function Stats({ items }: { items: [ReactNode, ReactNode][] }) {
+  return (
+    <div className={stat}>
+      {items.map(([num, label], i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static trio
+        <div className={statCard} key={i}>
+          <span className={statNum}>{num}</span>
+          <span className={statLabel}>{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const EDITION = [
+  ["Exporte notas em PDF, com capa", 11],
+  ["Digite / para inserir qualquer bloco", 10],
+  ["Suas notas voltam inteiras, mesmo offline", 9],
+  ["Busca mais rápida em cadernos grandes", 6],
+] as const;
+
+function InicioPane() {
+  return (
+    <>
+      <PaneHead
+        title={
+          <>
+            Bom dia, Ana.{" "}
+            <span className="font-extrabold">Uma edição espera você.</span>
+          </>
+        }
+      >
+        A #14 sai na próxima sexta às 10:00, se você aprovar.
+      </PaneHead>
+      <div className="rl-swap flex flex-col gap-3 rounded-[14px] border-[1.5px] border-rl-accent bg-rl-card px-[18px] py-4 shadow-[0_0_60px_-30px_var(--color-rl-accent)]">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <span
+            className={`inline-flex items-center gap-[7px] text-rl-accent-light ${pixelTag} text-[9.5px]`}
+          >
+            <span className="rl-blink size-1.5 bg-rl-accent" />
+            edição #14 · aguardando você
+          </span>
+          <span className="font-rl-mono text-[10.5px] text-rl-faint">
+            1.284 inscritos · expira em 2 dias
+          </span>
+        </div>
+        <span className="font-bold font-rl-display text-[18px] leading-[1.1] tracking-[-0.035em]">
+          PDF com capa, comando / e sync mais firme
+        </span>
+        <ul className="m-0 flex list-none flex-col gap-[7px] p-0">
+          {EDITION.map(([item, score], i) => {
+            const decide = score === 6;
+            return (
+              <li
+                className={`grid grid-cols-[18px_minmax(0,1fr)_auto] items-center gap-2.5 text-[12.5px] ${decide ? "text-rl-dim" : "text-rl-fg"}`}
+                key={item}
+              >
+                <span
+                  className={`grid size-[18px] place-items-center rounded-[5px] font-rl-pixel text-[9px] ${decide ? "border border-[#4A4D57] border-dashed text-rl-dim" : "bg-rl-accent/14 text-rl-accent-light"}`}
+                >
+                  {decide ? "?" : i + 1}
+                </span>
+                <span className="truncate">
+                  {item}
+                  {decide && (
+                    <span className={`ml-1.5 text-rl-accent-pale ${pixelTag}`}>
+                      você decide
+                    </span>
+                  )}
+                </span>
+                <Meter score={score} />
+              </li>
+            );
+          })}
+        </ul>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="inline-flex min-h-[34px] items-center rounded-lg bg-rl-accent px-3.5 font-bold text-[12.5px] text-white">
+            Revisar e aprovar
+          </span>
+          <span className="text-[12px] text-rl-dim">Enviar teste para mim</span>
+          <span className="ml-auto text-[11px] text-rl-faint">
+            Nada sai sem a sua aprovação.
+          </span>
+        </div>
+      </div>
+      <div className={stat}>
+        <div className={statCard}>
+          <span className={statNum}>1.284</span>
+          <span className={statLabel}>
+            inscritos · <span className="text-rl-ok">+12</span> esta semana
+          </span>
+        </div>
+        <div className={statCard}>
+          <span className={statNum}>61%</span>
+          <span className={statLabel}>abriram a #13 · média 58%</span>
+        </div>
+        <div className={`${statCard} gap-1`}>
+          <span className={statNum}>130</span>
+          <span className={statLabel}>créditos · a #14 cabe</span>
+          <span
+            aria-hidden="true"
+            className="grid h-1 grid-cols-[repeat(25,1fr)] gap-px"
+          >
+            {Array.from({ length: 25 }, (_, i) => (
+              <span
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length meter
+                key={i}
+                className={
+                  i < 18
+                    ? "bg-[#2A2C34]"
+                    : i < 22
+                      ? "bg-rl-accent-pale"
+                      : "bg-rl-accent"
+                }
+              />
+            ))}
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const CHANGES = [
+  [
+    "Compartilhe uma nota por link, com prazo",
+    "b81d2aa · feat(share) · há 3 h",
+    10,
+  ],
+  [
+    "No celular, o teclado não cobre mais o texto",
+    "6ae09c1 · fix(mobile) · há 5 h",
+    9,
+  ],
+  [
+    "Busca mais rápida em cadernos grandes",
+    "7d6c5b4 · perf(search) · ontem",
+    6,
+  ],
+  ["Refatoração do estado", "0b1c2d3 · refactor(store) · ontem", 2],
+  ["Dependências atualizadas", "8b9c0d1 · chore(deps) · 29 out", 1],
+] as const;
+
+function verdict(score: number) {
+  if (score > 6) return ["novidade", "text-rl-accent-light"];
+  return score === 6
+    ? ["você decide", "text-rl-accent-pale"]
+    : ["com o time", "text-rl-faint"];
+}
+
+function MudancasPane() {
+  return (
+    <>
+      <PaneHead title={<span className="font-extrabold">Mudanças</span>}>
+        Tudo que entrou em main desde a #13, já triado. Você só mexe se
+        discordar.
+      </PaneHead>
+      <div className={`${pane} flex flex-col gap-1 p-2`}>
+        <div className="flex flex-wrap gap-1.5 px-1.5 pt-1 pb-2 text-[11.5px]">
+          {[
+            ["Todas", "14", true],
+            ["Novidades", "5"],
+            ["Você decide", "1"],
+            ["Com o time", "8"],
+          ].map(([label, count, on]) => (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 ${on ? "border-rl-edge bg-rl-chip text-rl-fg" : "border-transparent text-rl-dim"}`}
+              key={label as string}
+            >
+              {label}
+              <span className="font-rl-mono text-[10px] text-rl-faint">
+                {count}
+              </span>
+            </span>
+          ))}
+        </div>
+        {CHANGES.map(([title, meta, score]) => {
+          const [label, color] = verdict(score);
+          return (
+            <div
+              className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2.5 py-2 ${score > 6 ? "bg-rl-accent/8" : ""}`}
+              key={title}
+            >
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span
+                  className={`truncate text-[12.5px] ${score >= 6 ? "text-rl-fg" : "text-rl-dim"}`}
+                >
+                  {title}
+                </span>
+                <span className="truncate font-rl-mono text-[10px] text-rl-faint">
+                  {meta}
+                </span>
+              </span>
+              <span className="flex flex-col items-end gap-1">
+                <span className={`${pixelTag} ${color}`}>{label}</span>
+                <Meter score={score} />
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div className={`${pane} flex flex-col gap-2 px-3.5 py-3`}>
+        <span className="text-[12px] text-rl-soft">
+          Sempre de fora · aplicadas antes da triagem
+        </span>
+        <div className="flex flex-wrap gap-1.5 font-rl-mono text-[11.5px]">
+          {["chore:", "ci:", "test:", "/internal/**"].map((rule) => (
+            <span className={chip} key={rule}>
+              {rule}
+            </span>
+          ))}
+          <span className="rounded-md border border-[#4A4D57] border-dashed px-[9px] py-[5px] text-rl-dim">
+            + regra
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const PEOPLE = [
+  ["marina@estudiocaju.com", "formulário", "novo"],
+  ["dev@loopify.app", "API", "novo"],
+  ["pedro.h@gmail.com", "formulário", "ativo"],
+  ["ana.ribeiro@uol.com.br", "importado", "ativo"],
+  ["leticia.m@outlook.com", "importado", "bounce"],
+] as const;
+
+const STATUS = {
+  novo: "text-rl-accent-light",
+  ativo: "text-rl-ok",
+  bounce: "text-rl-faint",
+};
+
+function InscritosPane() {
+  return (
+    <>
+      <PaneHead title={<span className="font-extrabold">Inscritos</span>}>
+        Quem recebe as edições da Tinta. Cada pessoa aqui pediu para estar aqui.
+      </PaneHead>
+      <Stats
+        items={[
+          [
+            "1.284",
+            <>
+              ativos · <span className="text-rl-ok">+12</span> esta semana
+            </>,
+          ],
+          ["58%", "abertura média · 13 edições"],
+          ["2,1%", "saíram em 90 dias"],
+        ]}
+      />
+      <div className={`${pane} flex flex-col p-2`}>
+        <div className="flex flex-col gap-1.5 px-2 pt-1 pb-3">
+          <span className="text-[11px] text-rl-faint">De onde vêm</span>
+          <span aria-hidden="true" className="flex h-1.5 gap-px">
+            <span className="w-[61%] bg-rl-accent" />
+            <span className="w-[29%] bg-rl-accent-pale" />
+            <span className="w-[10%] bg-[#3A3D46]" />
+          </span>
+          <span className="flex flex-wrap gap-x-3 font-rl-mono text-[10.5px] text-rl-dim">
+            <span>formulário 61%</span>
+            <span>API 29%</span>
+            <span>importados 10%</span>
+          </span>
+        </div>
+        {PEOPLE.map(([email, origin, status]) => (
+          <div
+            className="grid grid-cols-[minmax(0,1fr)_76px_44px] items-center gap-3 border-rl-hairline border-t px-2 py-2 text-[12px]"
+            key={email}
+          >
+            <span className="truncate font-rl-mono text-[11.5px] text-rl-fg">
+              {email}
+            </span>
+            <span className="text-rl-dim">{origin}</span>
+            <span className={`${pixelTag} ${STATUS[status]}`}>{status}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+const CADENCES = [
+  ["Semanal", "Sexta, 10:00. Previsível para quem lê.", "≈ 4/mês", true],
+  ["Quinzenal", "Sextas alternadas. Metade do custo.", "≈ 2/mês"],
+  [
+    "Quando acumular",
+    "Assim que juntar o mínimo de novidades.",
+    "só quando vale",
+  ],
+] as const;
+
+function RitmoPane() {
+  return (
+    <>
+      <PaneHead title={<span className="font-extrabold">Ritmo</span>}>
+        Quantas edições, quando, e as regras que seguram crédito quando não vale
+        a pena.
+      </PaneHead>
+      <div className={`${pane} flex flex-col gap-1.5 p-2`}>
+        {CADENCES.map(([title, body, meta, on]) => (
+          <div
+            className={`grid grid-cols-[14px_minmax(0,1fr)_auto] items-center gap-3 rounded-[10px] border px-3 py-2.5 ${on ? "border-rl-accent/40 bg-rl-accent/14" : "border-transparent"}`}
+            key={title}
+          >
+            <span
+              className={`grid size-3.5 place-items-center rounded-full border-[1.5px] ${on ? "border-rl-accent" : "border-[#4A4D57]"}`}
+            >
+              {on && <span className="size-1.5 rounded-full bg-rl-accent" />}
+            </span>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <strong className="text-[12.5px] text-rl-fg">{title}</strong>
+              <span className="truncate text-[11.5px] text-rl-dim">{body}</span>
+            </span>
+            <span className="font-rl-mono text-[10.5px] text-rl-faint">
+              {meta}
+            </span>
+          </div>
+        ))}
+        <div className="flex flex-wrap items-center gap-1.5 px-3 pt-1.5 pb-1 font-rl-mono text-[11px]">
+          {["seg", "ter", "qua", "qui", "sex"].map((day) => (
+            <span
+              className={`rounded-md border px-2 py-1 ${day === "sex" ? "border-rl-accent bg-rl-accent/14 text-rl-fg" : "border-rl-line text-rl-dim"}`}
+              key={day}
+            >
+              {day}
+            </span>
+          ))}
+          <span className="ml-auto text-rl-faint">
+            10:00 · America/Sao_Paulo
+          </span>
+        </div>
+      </div>
+      <div className={`${pane} flex flex-col gap-2.5 px-3.5 py-3`}>
+        <div className="flex items-start justify-between gap-3">
+          <span className="flex flex-col gap-0.5">
+            <strong className="text-[12.5px] text-rl-fg">
+              Rascunhar só com novidades suficientes
+            </strong>
+            <span className="text-[11.5px] text-rl-dim">
+              Semana fraca não vira email: as mudanças esperam a próxima.
+            </span>
+          </span>
+          <span className="flex-none rounded-md border border-rl-edge bg-rl-chip px-2 py-1 font-rl-mono text-[11px] text-rl-fg">
+            mín. 3
+          </span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className="flex justify-between font-rl-mono text-[10.5px] text-rl-faint">
+            <span>teto do mês · estimado 480</span>
+            <span>
+              <span className="text-rl-fg">490</span> / 500 cr
+            </span>
+          </span>
+          <span aria-hidden="true" className="flex h-1.5 bg-[#1E2027]">
+            <span className="w-[96%] bg-rl-accent" />
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const TOOLS = [
+  ["relay.changes.list", "Lê o que entrou em main, já triado.", "grátis"],
+  ["relay.edition.draft", "Rascunha a edição no tom da marca.", "50 cr"],
+  ["relay.edition.approve", "Aprova e agenda, se você deixar.", "desligado"],
+] as const;
+
+function AgentesPane() {
+  const green = "text-[#A9D7B9]";
+  return (
+    <>
+      <PaneHead title={<span className="font-extrabold">Agentes e MCP</span>}>
+        Seu agente faz aqui o que você faria — de onde você já trabalha.
+      </PaneHead>
+      <div className={`${pane} flex flex-col gap-2.5 p-3`}>
+        <div className="flex flex-wrap gap-1.5 text-[11.5px]">
+          {["Claude Code", "Cursor", "Codex", "CLI"].map((client, i) => (
+            <span
+              className={`rounded-md border px-2 py-1 ${i === 0 ? "border-rl-edge bg-rl-chip text-rl-fg" : "border-transparent text-rl-dim"}`}
+              key={client}
+            >
+              {client}
+            </span>
+          ))}
+        </div>
+        <pre className="m-0 overflow-x-auto rounded-[10px] border border-rl-line bg-rl-ink px-3.5 py-3 font-rl-mono text-[11.5px] text-rl-soft leading-[1.6]">
+          <span className="text-rl-faint">{"// .mcp.json"}</span>
+          {"\n{ "}
+          <span className={green}>"relay"</span>
+          {": { "}
+          <span className={green}>"command"</span>
+          {": "}
+          <span className={green}>"npx"</span>
+          {", "}
+          <span className={green}>"args"</span>
+          {": ["}
+          <span className={green}>"relay-mcp"</span>
+          {"] } }"}
+        </pre>
+        <span className="inline-flex items-center gap-2 font-rl-mono text-[10.5px] text-rl-dim">
+          <span className="size-1.5 bg-rl-ok" />
+          claude-code conectado · há 2 h
+        </span>
+      </div>
+      <div className={`${pane} flex flex-col p-1.5`}>
+        {TOOLS.map(([tool, body, cost]) => (
+          <div
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2.5 py-2"
+            key={tool}
+          >
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="truncate font-rl-mono text-[11.5px] text-rl-fg">
+                {tool}
+              </span>
+              <span className="truncate text-[11.5px] text-rl-dim">{body}</span>
+            </span>
+            <span
+              className={`${pixelTag} ${cost === "desligado" ? "text-rl-faint" : "text-rl-accent-light"}`}
+            >
+              {cost}
+            </span>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+const PANES: Record<ViewId, () => ReactNode> = {
+  inicio: InicioPane,
+  mudancas: MudancasPane,
+  inscritos: InscritosPane,
+  ritmo: RitmoPane,
+  agentes: AgentesPane,
+};
+
+function AppWindow({ view }: { view: ViewId }) {
+  const Pane = PANES[view];
+  const { path } = VIEWS.find(({ id }) => id === view) ?? VIEWS[0];
+
   return (
     <div
-      className={`${card} rl-reveal flex flex-col gap-3 overflow-hidden px-[22px] py-5 ${className}`}
+      aria-labelledby={`painel-${view}`}
+      className="rl-reveal relative flex min-h-[560px] flex-col max-lg:min-h-[700px] overflow-hidden rounded-[18px] border border-rl-edge bg-rl-ink shadow-[0_40px_120px_-40px_#000000,0_0_0_1px_#00000066] [--rl-i:1]"
+      id="painel-tela"
+      role="tabpanel"
     >
-      <img
-        alt={alt}
-        className={`mx-auto -mt-1 mb-1.5 aspect-[600/340] h-auto w-full ${maxWidth}`}
-        height={340}
-        src={src}
-        width={600}
-      />
-      <BentoCopy title={title}>{children}</BentoCopy>
-      {footer}
+      <div className="flex items-center gap-2.5 border-rl-hairline border-b bg-[#0E0F13] px-3.5 py-2.5">
+        <span
+          aria-hidden="true"
+          className="inline-grid grid-cols-[repeat(3,8px)] gap-[5px]"
+        >
+          <span className="h-2 bg-rl-edge" />
+          <span className="h-2 bg-rl-edge" />
+          <span className="h-2 bg-rl-edge" />
+        </span>
+        <span className="mx-auto truncate rounded-md border border-rl-hairline bg-rl-ink px-3 py-[3px] font-rl-mono text-[11.5px] text-rl-faint">
+          app.relay.sh/tinta/
+          <span className="rl-swap inline-block" key={view}>
+            {path}
+          </span>
+        </span>
+        <span className="hidden items-center gap-1.5 font-rl-pixel text-[9.5px] text-rl-accent-light uppercase sm:inline-flex">
+          <span className="rl-blink size-[5px] bg-rl-accent" />
+          lendo main
+        </span>
+      </div>
+      <div className="grid flex-1 grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)]">
+        <div className="hidden flex-col gap-3 border-rl-hairline border-r bg-[#0E0F13] px-2.5 py-3.5 md:flex">
+          <span className="flex items-center gap-2 px-1.5 py-0.5 font-extrabold font-rl-display text-[15px] tracking-[-0.045em]">
+            <Logo size={1.6} />
+            relay
+          </span>
+          <span className="flex items-center gap-2 rounded-lg border border-rl-line bg-rl-raised px-2 py-[7px]">
+            <span className="grid size-[18px] place-items-center rounded-[5px] bg-[#3446E0] font-bold font-rl-serif text-[10px] text-white">
+              T
+            </span>
+            <span className="flex flex-col leading-[1.15]">
+              <span className="font-semibold text-[12px]">Tinta</span>
+              <span className="font-rl-mono text-[9.5px] text-rl-faint">
+                tinta-app/tinta · main
+              </span>
+            </span>
+          </span>
+          <div className="flex flex-col gap-px">
+            {NAV.map(({ label, icon, view: target, meta }) => {
+              const on = target === view;
+              return (
+                <span
+                  className={`rl-nav flex min-h-[30px] items-center gap-[9px] rounded-[7px] px-2 text-[12.5px] ${on ? "bg-rl-chip text-rl-fg" : "text-rl-dim"}`}
+                  key={label}
+                >
+                  <Icon name={icon} size={14} />
+                  {label}
+                  {meta && (
+                    <span className="ml-auto font-rl-mono text-[10.5px] text-[#6E717C]">
+                      {meta}
+                    </span>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+          <div className="flex flex-col gap-1.5 rounded-[9px] border border-rl-line bg-rl-raised p-2.5">
+            <span className="flex items-center justify-between">
+              <span className="font-bold font-rl-display text-[12.5px]">
+                #14
+              </span>
+              <span className="font-rl-pixel text-[8.5px] text-rl-accent-light uppercase">
+                aguardando
+              </span>
+            </span>
+            <span className="font-rl-mono text-[10px] text-rl-dim">
+              sex · 7 nov · 10:00
+            </span>
+            <span aria-hidden="true" className="grid grid-cols-12 gap-0.5">
+              {Array.from({ length: 12 }, (_, i) => (
+                <span
+                  className={`h-1 ${i < 6 ? "bg-rl-accent" : i < 8 ? "bg-rl-accent-pale" : "bg-rl-line"}`}
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length meter
+                  key={i}
+                />
+              ))}
+            </span>
+          </div>
+          <span className="mt-auto px-1.5 pb-[30px] font-rl-mono text-[10px] text-rl-faint">
+            Ana · Indie · 130 créditos
+          </span>
+        </div>
+        {/* New key per view: @starting-style replays .rl-swap on each child. */}
+        <div
+          className="flex min-w-0 flex-col gap-4 px-6 pt-6 pb-9 max-sm:px-4"
+          key={view}
+        >
+          <Pane />
+        </div>
+      </div>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute right-0 -bottom-px left-0 grid grid-cols-[repeat(72,1fr)] auto-rows-[8px] opacity-55"
+      >
+        {Array.from(HEM, (on, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed pixel pattern
+          <span className={on === "1" ? "bg-rl-accent" : ""} key={i} />
+        ))}
+      </span>
     </div>
   );
 }
 
 function Product() {
-  const pre =
-    "m-0 overflow-x-auto rounded-[10px] border border-rl-line bg-rl-ink px-3.5 py-3 font-rl-mono text-[12.5px] text-rl-soft leading-[1.6]";
-  const green = "text-[#A9D7B9]";
-  const cell = `${card} rl-reveal flex flex-col justify-between gap-3.5 overflow-hidden px-[22px] py-5`;
+  const [view, setView] = useState<ViewId>("inicio");
+  // Arrow keys switch instantly: keyboard moves shouldn't wait on a fade.
+  const [instant, setInstant] = useState(false);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  function onKeyDown(event: KeyboardEvent, index: number) {
+    const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[
+      event.key
+    ];
+    if (!step) return;
+    event.preventDefault();
+    const next = (index + step + VIEWS.length) % VIEWS.length;
+    setInstant(true);
+    setView(VIEWS[next].id);
+    tabs.current[next]?.focus();
+  }
 
   return (
     <section
-      className={`mx-auto flex max-w-[1280px] flex-col gap-11 px-8 pt-[120px] pb-[60px] ${anchor}`}
+      className={`mx-auto flex max-w-[1280px] flex-col gap-11 px-8 pt-[120px] pb-[60px] max-sm:px-4 ${anchor}`}
       id="produto"
     >
-      <div className="rl-reveal flex max-w-[820px] flex-col gap-[18px]">
-        <Eyebrow>03 · Tudo num lugar só</Eyebrow>
-        <h2 className={`${h2} text-balance`}>
-          Um painel pequeno{" "}
-          <span className="font-extrabold">
-            para um trabalho que ninguém queria fazer.
-          </span>
-        </h2>
-      </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-3.5 min-[980px]:grid-cols-6">
-        <BentoIso
-          alt="Uma fechadura de pinos: três pinos, DKIM, SPF e DMARC, alinhados na linha de corte; a chave está na frente e o botão lateral gira."
-          className="min-[980px]:col-span-3"
-          footer={
-            <div className="flex flex-wrap gap-x-3.5 gap-y-1.5 font-rl-mono text-rl-soft text-[12px]">
-              {["relay._domainkey", "send", "_dmarc"].map((record) => (
-                <span key={record}>
-                  {record} <span className="text-rl-ok">ok</span>
-                </span>
-              ))}
-            </div>
-          }
-          maxWidth="max-w-[520px]"
-          src={isoDomain}
-          title="Domínio verificado"
-        >
-          Três pinos, DKIM, SPF e DMARC. Quando os três alinham, o botão gira: o
-          email sai do seu endereço e chega na caixa de entrada, não em
-          promoções.
-        </BentoIso>
-        <BentoIso
-          alt="Um seletor rotativo de três posições sobre uma placa; o ponteiro aponta para a primeira posição, Direto."
-          className="[--rl-i:1] min-[980px]:col-span-3"
-          maxWidth="max-w-[520px]"
-          src={isoTone}
-          title="Tom de voz"
-        >
-          Um seletor de três posições. Direto, caloroso ou técnico; você gira
-          uma vez.
-        </BentoIso>
-        <BentoIso
-          alt="Um temporizador de cames com sete ressaltos em linha, o quinto, a sexta-feira, mais alto e aceso; um seguidor com roldana apoia nele e toca um sino."
-          className="min-[980px]:col-span-2"
-          maxWidth="max-w-[340px]"
-          src={isoCadence}
-          title="Frequência"
-        >
-          Sete casas, uma marcada. A edição sai no dia escolhido; sem novidade,
-          o sino não toca.
-        </BentoIso>
-        <div className={`${cell} [--rl-i:1] min-[980px]:col-span-2`}>
-          <BentoCopy title="Inscritos">
-            CSV, lista colada ou API no seu cadastro. Quem cria conta já entra;
-            quem sai, sai sozinho.
-          </BentoCopy>
-          <pre className={pre}>
-            relay.subscribers.
-            <span className="text-rl-accent-light">add</span>
-            {"({\n  email: "}
-            <span className={green}>"ana@exemplo.com"</span>
-            {"\n})"}
-          </pre>
-          <span className="text-[13px] text-rl-faint">
-            Descadastros entram sozinhos. Nada de planilha.
-          </span>
-        </div>
-        <div className={`${cell} [--rl-i:2] min-[980px]:col-span-2`}>
-          <BentoCopy title="Sempre de fora">
-            Suas regras, além do que a Relay já filtra. Por prefixo de commit ou
-            por caminho no repositório.
-          </BentoCopy>
-          <div className="flex flex-wrap gap-1.5 font-rl-mono text-[12.5px]">
-            {["chore:", "ci:", "test:", "/internal/**"].map((rule) => (
-              <span className={chip} key={rule}>
-                {rule}
-              </span>
-            ))}
-            <span className="rounded-md border border-[#4A4D57] border-dashed px-[9px] py-[5px] text-rl-dim">
-              + regra
+      <div className="rl-reveal flex flex-wrap items-end justify-between gap-6">
+        <div className="flex max-w-[760px] flex-col gap-[18px]">
+          <Eyebrow>03 · O painel</Eyebrow>
+          <h2 className={`${h2} text-balance`}>
+            Um painel pequeno{" "}
+            <span className="font-extrabold">
+              para um trabalho que ninguém queria fazer.
             </span>
-          </div>
-          <span className="text-[13px] text-rl-faint">
-            Aplicadas antes da triagem, em todo repositório conectado.
-          </span>
+          </h2>
         </div>
-        <div className={`${cell} min-[980px]:col-span-6`}>
-          <BentoCopy title="Feita para agentes">
-            Um servidor MCP e uma CLI deixam o seu agente ler o repositório,
-            rascunhar e aprovar edições de dentro do Claude Code, do Cursor ou
-            do que você usar. A Relay cuida da IA, da marca e do envio.
-          </BentoCopy>
-          <pre className={pre}>
-            <span className="text-rl-faint">// mcp.json</span>
-            {"\n{ "}
-            <span className={green}>"relay"</span>
-            {": { "}
-            <span className={green}>"command"</span>
-            {": "}
-            <span className={green}>"npx"</span>
-            {", "}
-            <span className={green}>"args"</span>
-            {": ["}
-            <span className={green}>"relay-mcp"</span>
-            {"] } }\n\n"}
-            <span className="text-rl-faint">&gt;</span>
-            {" relay.draft_edition({ since: "}
-            <span className={green}>"#13"</span>
-            {" })\n"}
-            <span className="text-rl-faint">&gt;</span>
-            {" relay.approve({ edition: 14, send_at: "}
-            <span className={green}>"fri 10:00"</span>
-            {" })"}
-          </pre>
-          <div className="flex flex-wrap gap-1.5 font-rl-mono text-[12.5px]">
-            {["MCP", "API", "CLI", "webhooks"].map((item) => (
-              <span className={chip} key={item}>
-                {item}
-              </span>
-            ))}
-          </div>
+        <p className="m-0 max-w-[380px] text-[18px] text-rl-soft">
+          Uma tela por semana: o que mudou, o que vai sair, quanto custou. O
+          resto a Relay faz sozinha.
+        </p>
+      </div>
+      <div
+        className="grid grid-cols-1 items-stretch gap-7 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]"
+        data-instant={instant || undefined}
+      >
+        <div
+          aria-label="Telas do painel"
+          aria-orientation="vertical"
+          className="rl-stagger flex flex-col gap-1.5"
+          role="tablist"
+        >
+          {VIEWS.map(({ id, icon, title, body }, index) => {
+            const on = id === view;
+            return (
+              <button
+                aria-controls="painel-tela"
+                aria-selected={on}
+                className={`rl-press grid cursor-pointer grid-cols-[36px_minmax(0,1fr)] items-start gap-3.5 rounded-[14px] border px-4 py-3.5 text-left ${on ? "border-rl-accent/40 bg-rl-accent/14" : "border-transparent bg-transparent hover:bg-rl-raised"}`}
+                id={`painel-${id}`}
+                key={id}
+                onClick={() => {
+                  setInstant(false);
+                  setView(id);
+                }}
+                onKeyDown={(event) => onKeyDown(event, index)}
+                ref={(node) => {
+                  tabs.current[index] = node;
+                }}
+                role="tab"
+                tabIndex={on ? 0 : -1}
+                type="button"
+              >
+                <span
+                  className={`rl-tab-icon grid size-9 place-items-center rounded-[10px] ${on ? "bg-rl-accent text-white" : "bg-rl-chip text-rl-dim"}`}
+                >
+                  <Icon name={icon} size={18} />
+                </span>
+                <span className="flex flex-col gap-[3px]">
+                  <strong
+                    className={`font-bold font-rl-display text-[17px] tracking-[-0.03em] ${on ? "text-rl-fg" : "text-rl-soft"}`}
+                  >
+                    {title}
+                  </strong>
+                  {/* Phones: only the open tab explains itself, so the screen stays in view.
+                      .rl-swap fades it in as it leaves display: none. */}
+                  <span
+                    className={`rl-swap text-[14px] text-rl-dim leading-normal ${on ? "" : "max-lg:hidden"}`}
+                  >
+                    {body}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
+        <AppWindow view={view} />
       </div>
     </section>
   );

@@ -148,6 +148,18 @@
   transition: color 150ms ease;
 }
 
+[data-instant] .rl-swap {
+  transition: none;
+}
+
+/* Panel tabs swap state often, so color only: no movement to wait for. */
+.rl-tab-icon,
+.rl-nav {
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
+}
+
 .rl-press {
   transition:
     color 150ms ease,
