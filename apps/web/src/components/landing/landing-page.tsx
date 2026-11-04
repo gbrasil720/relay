@@ -739,23 +739,29 @@ const VIEWS = [
 
 type ViewId = (typeof VIEWS)[number]["id"];
 
-const NAV: {
-  label: string;
-  icon: IconName;
-  view?: ViewId;
-  meta?: ReactNode;
-}[] = [
+// The demo's day of the week drives every date the panes show.
+const DAYS = {
+  seg: ["segunda", "3 nov"],
+  ter: ["terça", "4 nov"],
+  qua: ["quarta", "5 nov"],
+  qui: ["quinta", "6 nov"],
+  sex: ["sexta", "7 nov"],
+} as const;
+
+type Day = keyof typeof DAYS;
+
+// State the panes share, so a change on one screen shows up on the others.
+type Demo = {
+  go: (view: ViewId) => void;
+  approved: boolean;
+  setApproved: (approved: boolean) => void;
+  day: Day;
+  setDay: (day: Day) => void;
+};
+
+const NAV: { label: string; icon: IconName; view?: ViewId; meta?: string }[] = [
   { label: "Início", icon: "home", view: "inicio" },
-  {
-    label: "Edições",
-    icon: "mail",
-    view: "ritmo",
-    meta: (
-      <span className="rounded-[3px] bg-rl-accent px-[5px] py-px font-rl-pixel text-[9px] text-white">
-        1
-      </span>
-    ),
-  },
+  { label: "Edições", icon: "mail", view: "ritmo" },
   { label: "Mudanças", icon: "changes", view: "mudancas", meta: "5 novas" },
   { label: "Inscritos", icon: "people", view: "inscritos", meta: "1.284" },
   { label: "Marca e envio", icon: "tag" },
@@ -768,24 +774,15 @@ const HEM =
   "010101010101010101010101010101010101010101010101010101010101010101010110" +
   "111011101110111011101110111011101110111011101110111011101110111011101110";
 
-function Meter({
-  score,
-  cell = "4px",
-  height = "h-[7px]",
-}: {
-  score: number;
-  cell?: string;
-  height?: string;
-}) {
+function Meter({ score }: { score: number }) {
   return (
     <span
       aria-hidden="true"
-      className="grid gap-0.5"
-      style={{ gridTemplateColumns: `repeat(12, ${cell})` }}
+      className="grid grid-cols-[repeat(12,4px)] gap-0.5"
     >
       {Array.from({ length: 12 }, (_, i) => (
         <span
-          className={height}
+          className="h-[7px]"
           // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length meter
           key={i}
           style={{ background: i < score ? scoreColor(score) : "#1E2027" }}
@@ -815,22 +812,35 @@ function PaneHead({
 const pane = "rl-swap rounded-[14px] border border-rl-line bg-rl-card";
 const stat = "rl-swap grid grid-cols-3 gap-2.5";
 const statCard =
-  "flex flex-col gap-0.5 rounded-[10px] border border-rl-line bg-rl-card px-3.5 py-3";
+  "flex flex-col gap-0.5 rounded-[10px] border border-rl-line bg-rl-card px-3.5 py-3 text-left";
+const statLink = `${statCard} rl-press cursor-pointer hover:border-rl-edge`;
 const statNum = "font-extrabold font-rl-display text-[20px] tracking-[-0.04em]";
 const statLabel = "text-[11px] text-rl-faint";
 const pixelTag = "font-rl-pixel text-[9px] uppercase";
+const textLink =
+  "rl-link cursor-pointer border-0 bg-transparent p-0 text-left text-rl-dim hover:text-rl-fg";
 
-function Stats({ items }: { items: [ReactNode, ReactNode][] }) {
+// A filter chip or segmented option inside the demo.
+function Choice({
+  on,
+  onClick,
+  children,
+  className = "",
+}: {
+  on: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className={stat}>
-      {items.map(([num, label], i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static trio
-        <div className={statCard} key={i}>
-          <span className={statNum}>{num}</span>
-          <span className={statLabel}>{label}</span>
-        </div>
-      ))}
-    </div>
+    <button
+      aria-pressed={on}
+      className={`rl-press inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1 ${on ? "border-rl-edge bg-rl-chip text-rl-fg" : "border-transparent bg-transparent text-rl-dim hover:text-rl-fg"} ${className}`}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -841,29 +851,47 @@ const EDITION = [
   ["Busca mais rápida em cadernos grandes", 6],
 ] as const;
 
-function InicioPane() {
+function InicioPane({ go, approved, setApproved, day }: Demo) {
+  const [tested, setTested] = useState(false);
+  const [weekday, date] = DAYS[day];
+
   return (
     <>
       <PaneHead
         title={
           <>
             Bom dia, Ana.{" "}
-            <span className="font-extrabold">Uma edição espera você.</span>
+            <span className="font-extrabold">
+              {approved ? "Tudo certo por aqui." : "Uma edição espera você."}
+            </span>
           </>
         }
       >
-        A #14 sai na próxima sexta às 10:00, se você aprovar.
+        {approved
+          ? `A #14 está agendada para ${weekday}, ${date}, às 10:00.`
+          : `A #14 sai na próxima ${weekday} às 10:00, se você aprovar.`}
       </PaneHead>
-      <div className="rl-swap flex flex-col gap-3 rounded-[14px] border-[1.5px] border-rl-accent bg-rl-card px-[18px] py-4 shadow-[0_0_60px_-30px_var(--color-rl-accent)]">
+      <div
+        className={`rl-swap flex flex-col gap-3 rounded-[14px] border-[1.5px] bg-rl-card px-[18px] py-4 ${approved ? "border-rl-line" : "border-rl-accent shadow-[0_0_60px_-30px_var(--color-rl-accent)]"}`}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <span
-            className={`inline-flex items-center gap-[7px] text-rl-accent-light ${pixelTag} text-[9.5px]`}
+            className={`inline-flex items-center gap-[7px] ${pixelTag} text-[9.5px] ${approved ? "text-rl-ok" : "text-rl-accent-light"}`}
           >
-            <span className="rl-blink size-1.5 bg-rl-accent" />
-            edição #14 · aguardando você
+            <span
+              className={
+                approved
+                  ? "size-1.5 bg-rl-ok"
+                  : "rl-blink size-1.5 bg-rl-accent"
+              }
+            />
+            {approved
+              ? "edição #14 · agendada"
+              : "edição #14 · aguardando você"}
           </span>
           <span className="font-rl-mono text-[10.5px] text-rl-faint">
-            1.284 inscritos · expira em 2 dias
+            1.284 inscritos ·{" "}
+            {approved ? `${weekday} 10:00` : "expira em 2 dias"}
           </span>
         </div>
         <span className="font-bold font-rl-display text-[18px] leading-[1.1] tracking-[-0.035em]">
@@ -885,9 +913,13 @@ function InicioPane() {
                 <span className="truncate">
                   {item}
                   {decide && (
-                    <span className={`ml-1.5 text-rl-accent-pale ${pixelTag}`}>
+                    <button
+                      className={`rl-link ml-1.5 cursor-pointer border-0 bg-transparent p-0 text-rl-accent-pale underline-offset-2 hover:underline ${pixelTag}`}
+                      onClick={() => go("mudancas")}
+                      type="button"
+                    >
                       você decide
-                    </span>
+                    </button>
                   )}
                 </span>
                 <Meter score={score} />
@@ -896,37 +928,76 @@ function InicioPane() {
           })}
         </ul>
         <div className="flex flex-wrap items-center gap-2.5">
-          <span className="inline-flex min-h-[34px] items-center rounded-lg bg-rl-accent px-3.5 font-bold text-[12.5px] text-white">
-            Revisar e aprovar
-          </span>
-          <span className="text-[12px] text-rl-dim">Enviar teste para mim</span>
+          {approved ? (
+            <span
+              className="rl-swap inline-flex min-h-[34px] items-center gap-2.5 text-[12.5px]"
+              key="approved"
+            >
+              <span className="font-semibold text-rl-ok">Aprovada.</span>
+              <button
+                className={textLink}
+                onClick={() => setApproved(false)}
+                type="button"
+              >
+                Desfazer
+              </button>
+            </span>
+          ) : (
+            <button
+              className="rl-press inline-flex min-h-[34px] cursor-pointer items-center rounded-lg border-0 bg-rl-accent px-3.5 font-bold text-[12.5px] text-white"
+              key="approve"
+              onClick={() => setApproved(true)}
+              type="button"
+            >
+              Revisar e aprovar
+            </button>
+          )}
+          <button
+            className={`${textLink} text-[12px]`}
+            onClick={() => setTested(true)}
+            type="button"
+          >
+            {tested ? (
+              <span className="rl-swap inline-block" key="sent">
+                Teste enviado para ana@tinta.app
+              </span>
+            ) : (
+              "Enviar teste para mim"
+            )}
+          </button>
           <span className="ml-auto text-[11px] text-rl-faint">
             Nada sai sem a sua aprovação.
           </span>
         </div>
       </div>
       <div className={stat}>
-        <div className={statCard}>
+        <button
+          className={statLink}
+          onClick={() => go("inscritos")}
+          type="button"
+        >
           <span className={statNum}>1.284</span>
           <span className={statLabel}>
             inscritos · <span className="text-rl-ok">+12</span> esta semana
           </span>
-        </div>
+        </button>
         <div className={statCard}>
           <span className={statNum}>61%</span>
           <span className={statLabel}>abriram a #13 · média 58%</span>
         </div>
-        <div className={`${statCard} gap-1`}>
+        <button
+          className={`${statLink} gap-1`}
+          onClick={() => go("ritmo")}
+          type="button"
+        >
           <span className={statNum}>130</span>
           <span className={statLabel}>créditos · a #14 cabe</span>
           <span
             aria-hidden="true"
-            className="grid h-1 grid-cols-[repeat(25,1fr)] gap-px"
+            className="grid h-1 w-full grid-cols-[repeat(25,1fr)] gap-px"
           >
             {Array.from({ length: 25 }, (_, i) => (
               <span
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length meter
-                key={i}
                 className={
                   i < 18
                     ? "bg-[#2A2C34]"
@@ -934,10 +1005,12 @@ function InicioPane() {
                       ? "bg-rl-accent-pale"
                       : "bg-rl-accent"
                 }
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length meter
+                key={i}
               />
             ))}
           </span>
-        </div>
+        </button>
       </div>
     </>
   );
@@ -963,14 +1036,32 @@ const CHANGES = [
   ["Dependências atualizadas", "8b9c0d1 · chore(deps) · 29 out", 1],
 ] as const;
 
-function verdict(score: number) {
-  if (score > 6) return ["novidade", "text-rl-accent-light"];
-  return score === 6
-    ? ["você decide", "text-rl-accent-pale"]
-    : ["com o time", "text-rl-faint"];
+const VERDICTS = {
+  novidade: ["novidade", "text-rl-accent-light"],
+  decide: ["você decide", "text-rl-accent-pale"],
+  time: ["com o time", "text-rl-faint"],
+} as const;
+
+type Verdict = keyof typeof VERDICTS;
+
+function verdictOf(score: number): Verdict {
+  if (score > 6) return "novidade";
+  return score === 6 ? "decide" : "time";
 }
 
+const CHANGE_FILTERS: [Verdict | "todas", string, string][] = [
+  ["todas", "Todas", "14"],
+  ["novidade", "Novidades", "5"],
+  ["decide", "Você decide", "1"],
+  ["time", "Com o time", "8"],
+];
+
 function MudancasPane() {
+  const [filter, setFilter] = useState<Verdict | "todas">("todas");
+  const rows = CHANGES.filter(
+    ([, , score]) => filter === "todas" || verdictOf(score) === filter,
+  );
+
   return (
     <>
       <PaneHead title={<span className="font-extrabold">Mudanças</span>}>
@@ -979,28 +1070,20 @@ function MudancasPane() {
       </PaneHead>
       <div className={`${pane} flex flex-col gap-1 p-2`}>
         <div className="flex flex-wrap gap-1.5 px-1.5 pt-1 pb-2 text-[11.5px]">
-          {[
-            ["Todas", "14", true],
-            ["Novidades", "5"],
-            ["Você decide", "1"],
-            ["Com o time", "8"],
-          ].map(([label, count, on]) => (
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 ${on ? "border-rl-edge bg-rl-chip text-rl-fg" : "border-transparent text-rl-dim"}`}
-              key={label as string}
-            >
+          {CHANGE_FILTERS.map(([id, label, count]) => (
+            <Choice key={id} on={filter === id} onClick={() => setFilter(id)}>
               {label}
               <span className="font-rl-mono text-[10px] text-rl-faint">
                 {count}
               </span>
-            </span>
+            </Choice>
           ))}
         </div>
-        {CHANGES.map(([title, meta, score]) => {
-          const [label, color] = verdict(score);
+        {rows.map(([title, meta, score]) => {
+          const [label, color] = VERDICTS[verdictOf(score)];
           return (
             <div
-              className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2.5 py-2 ${score > 6 ? "bg-rl-accent/8" : ""}`}
+              className={`rl-swap grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2.5 py-2 ${score > 6 ? "bg-rl-accent/8" : ""}`}
               key={title}
             >
               <span className="flex min-w-0 flex-col gap-0.5">
@@ -1054,66 +1137,110 @@ const STATUS = {
   bounce: "text-rl-faint",
 };
 
-function InscritosPane() {
+type Status = keyof typeof STATUS;
+
+function InscritosPane({ go }: Demo) {
+  const [status, setStatus] = useState<Status | "todos">("todos");
+  const [query, setQuery] = useState("");
+  const rows = PEOPLE.filter(
+    ([email, , s]) =>
+      (status === "todos" || s === status) &&
+      email.includes(query.trim().toLowerCase()),
+  );
+
   return (
     <>
       <PaneHead title={<span className="font-extrabold">Inscritos</span>}>
         Quem recebe as edições da Tinta. Cada pessoa aqui pediu para estar aqui.
       </PaneHead>
-      <Stats
-        items={[
-          [
-            "1.284",
-            <>
-              ativos · <span className="text-rl-ok">+12</span> esta semana
-            </>,
-          ],
-          ["58%", "abertura média · 13 edições"],
-          ["2,1%", "saíram em 90 dias"],
-        ]}
-      />
-      <div className={`${pane} flex flex-col p-2`}>
-        <div className="flex flex-col gap-1.5 px-2 pt-1 pb-3">
-          <span className="text-[11px] text-rl-faint">De onde vêm</span>
-          <span aria-hidden="true" className="flex h-1.5 gap-px">
-            <span className="w-[61%] bg-rl-accent" />
-            <span className="w-[29%] bg-rl-accent-pale" />
-            <span className="w-[10%] bg-[#3A3D46]" />
-          </span>
-          <span className="flex flex-wrap gap-x-3 font-rl-mono text-[10.5px] text-rl-dim">
-            <span>formulário 61%</span>
-            <span>API 29%</span>
-            <span>importados 10%</span>
+      <div className={stat}>
+        <div className={statCard}>
+          <span className={statNum}>1.284</span>
+          <span className={statLabel}>
+            ativos · <span className="text-rl-ok">+12</span> esta semana
           </span>
         </div>
-        {PEOPLE.map(([email, origin, status]) => (
+        <div className={statCard}>
+          <span className={statNum}>58%</span>
+          <span className={statLabel}>abertura média · 13 edições</span>
+        </div>
+        <div className={statCard}>
+          <span className={statNum}>2,1%</span>
+          <span className={statLabel}>saíram em 90 dias</span>
+        </div>
+      </div>
+      <div className={`${pane} flex flex-col p-2`}>
+        <div className="flex flex-wrap items-center gap-1.5 px-1 pt-1 pb-2 text-[11.5px]">
+          {(["todos", "novo", "ativo", "bounce"] as const).map((id) => (
+            <Choice key={id} on={status === id} onClick={() => setStatus(id)}>
+              {id === "todos"
+                ? "Todos"
+                : id === "novo"
+                  ? "Novos"
+                  : id === "ativo"
+                    ? "Ativos"
+                    : "Bounce"}
+            </Choice>
+          ))}
+          <input
+            aria-label="Buscar por email"
+            className="ml-auto min-w-0 flex-1 basis-32 rounded-md border border-rl-line bg-rl-ink px-2 py-1 font-rl-mono text-[16px] text-rl-fg outline-none placeholder:text-rl-faint focus:border-rl-edge sm:text-[11.5px]"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="buscar por email"
+            type="search"
+            value={query}
+          />
+        </div>
+        {rows.map(([email, origin, s]) => (
           <div
-            className="grid grid-cols-[minmax(0,1fr)_76px_44px] items-center gap-3 border-rl-hairline border-t px-2 py-2 text-[12px]"
+            className="rl-swap grid grid-cols-[minmax(0,1fr)_76px_44px] items-center gap-3 border-rl-hairline border-t px-2 py-2 text-[12px]"
             key={email}
           >
             <span className="truncate font-rl-mono text-[11.5px] text-rl-fg">
               {email}
             </span>
             <span className="text-rl-dim">{origin}</span>
-            <span className={`${pixelTag} ${STATUS[status]}`}>{status}</span>
+            <span className={`${pixelTag} ${STATUS[s]}`}>{s}</span>
           </div>
         ))}
+        {rows.length === 0 && (
+          <span className="rl-swap border-rl-hairline border-t px-2 py-3 text-[12px] text-rl-faint">
+            Ninguém com esse email.
+          </span>
+        )}
+        <button
+          className={`${textLink} mx-2 mt-1 mb-1 border-rl-hairline border-t pt-2.5 text-[11.5px]`}
+          onClick={() => go("agentes")}
+          type="button"
+        >
+          Chaves da API em Agentes e MCP →
+        </button>
       </div>
     </>
   );
 }
 
 const CADENCES = [
-  ["Semanal", "Sexta, 10:00. Previsível para quem lê.", "≈ 4/mês", true],
-  ["Quinzenal", "Sextas alternadas. Metade do custo.", "≈ 2/mês"],
-  [
-    "Quando acumular",
-    "Assim que juntar o mínimo de novidades.",
-    "só quando vale",
-  ],
+  ["semanal", "Semanal", "≈ 4/mês"],
+  ["quinzenal", "Quinzenal", "≈ 2/mês"],
+  ["acumular", "Quando acumular", "só quando vale"],
 ] as const;
 
-function RitmoPane() {
+type Cadence = (typeof CADENCES)[number][0];
+
+function cadenceBody(cadence: Cadence, weekday: string) {
+  const day = weekday[0].toUpperCase() + weekday.slice(1);
+  if (cadence === "semanal") return `${day}, 10:00. Previsível para quem lê.`;
+  if (cadence === "quinzenal") return `${day}s alternadas. Metade do custo.`;
+  return "Assim que juntar o mínimo de novidades.";
+}
+
+function RitmoPane({ day, setDay }: Demo) {
+  const [cadence, setCadence] = useState<Cadence>("semanal");
+  const [minimum, setMinimum] = useState(3);
+  const stepper =
+    "rl-press grid size-6 cursor-pointer place-items-center rounded-md border border-rl-edge bg-rl-chip text-rl-fg disabled:cursor-default disabled:opacity-40";
+
   return (
     <>
       <PaneHead title={<span className="font-extrabold">Ritmo</span>}>
@@ -1121,33 +1248,46 @@ function RitmoPane() {
         a pena.
       </PaneHead>
       <div className={`${pane} flex flex-col gap-1.5 p-2`}>
-        {CADENCES.map(([title, body, meta, on]) => (
-          <div
-            className={`grid grid-cols-[14px_minmax(0,1fr)_auto] items-center gap-3 rounded-[10px] border px-3 py-2.5 ${on ? "border-rl-accent/40 bg-rl-accent/14" : "border-transparent"}`}
-            key={title}
-          >
-            <span
-              className={`grid size-3.5 place-items-center rounded-full border-[1.5px] ${on ? "border-rl-accent" : "border-[#4A4D57]"}`}
+        {CADENCES.map(([id, title, meta]) => {
+          const on = cadence === id;
+          return (
+            <button
+              aria-pressed={on}
+              className={`rl-press grid cursor-pointer grid-cols-[14px_minmax(0,1fr)_auto] items-center gap-3 rounded-[10px] border px-3 py-2.5 text-left ${on ? "border-rl-accent/40 bg-rl-accent/14" : "border-transparent bg-transparent hover:bg-rl-raised"}`}
+              key={id}
+              onClick={() => setCadence(id)}
+              type="button"
             >
-              {on && <span className="size-1.5 rounded-full bg-rl-accent" />}
-            </span>
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <strong className="text-[12.5px] text-rl-fg">{title}</strong>
-              <span className="truncate text-[11.5px] text-rl-dim">{body}</span>
-            </span>
-            <span className="font-rl-mono text-[10.5px] text-rl-faint">
-              {meta}
-            </span>
-          </div>
-        ))}
+              <span
+                className={`rl-tint grid size-3.5 place-items-center rounded-full border-[1.5px] ${on ? "border-rl-accent" : "border-[#4A4D57]"}`}
+              >
+                {on && (
+                  <span className="rl-pop size-1.5 rounded-full bg-rl-accent" />
+                )}
+              </span>
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <strong className="text-[12.5px] text-rl-fg">{title}</strong>
+                <span className="truncate text-[11.5px] text-rl-dim">
+                  {cadenceBody(id, DAYS[day][0])}
+                </span>
+              </span>
+              <span className="font-rl-mono text-[10.5px] text-rl-faint">
+                {meta}
+              </span>
+            </button>
+          );
+        })}
         <div className="flex flex-wrap items-center gap-1.5 px-3 pt-1.5 pb-1 font-rl-mono text-[11px]">
-          {["seg", "ter", "qua", "qui", "sex"].map((day) => (
-            <span
-              className={`rounded-md border px-2 py-1 ${day === "sex" ? "border-rl-accent bg-rl-accent/14 text-rl-fg" : "border-rl-line text-rl-dim"}`}
-              key={day}
+          {(Object.keys(DAYS) as Day[]).map((id) => (
+            <button
+              aria-pressed={id === day}
+              className={`rl-press cursor-pointer rounded-md border px-2 py-1 ${id === day ? "border-rl-accent bg-rl-accent/14 text-rl-fg" : "border-rl-line bg-transparent text-rl-dim hover:text-rl-fg"}`}
+              key={id}
+              onClick={() => setDay(id)}
+              type="button"
             >
-              {day}
-            </span>
+              {id}
+            </button>
           ))}
           <span className="ml-auto text-rl-faint">
             10:00 · America/Sao_Paulo
@@ -1164,8 +1304,28 @@ function RitmoPane() {
               Semana fraca não vira email: as mudanças esperam a próxima.
             </span>
           </span>
-          <span className="flex-none rounded-md border border-rl-edge bg-rl-chip px-2 py-1 font-rl-mono text-[11px] text-rl-fg">
-            mín. 3
+          <span className="flex flex-none items-center gap-1.5 font-rl-mono text-[11px] text-rl-fg">
+            <button
+              aria-label="Menos novidades"
+              className={stepper}
+              disabled={minimum <= 1}
+              onClick={() => setMinimum(minimum - 1)}
+              type="button"
+            >
+              −
+            </button>
+            <span className="w-11 text-center tabular-nums">
+              mín. {minimum}
+            </span>
+            <button
+              aria-label="Mais novidades"
+              className={stepper}
+              disabled={minimum >= 6}
+              onClick={() => setMinimum(minimum + 1)}
+              type="button"
+            >
+              +
+            </button>
           </span>
         </div>
         <div className="flex flex-col gap-1.5">
@@ -1184,14 +1344,72 @@ function RitmoPane() {
   );
 }
 
+const green = "text-[#A9D7B9]";
+
+const CLIENTS = {
+  "Claude Code": (
+    <>
+      <span className="text-rl-faint">{"// .mcp.json"}</span>
+      {"\n{ "}
+      <span className={green}>"relay"</span>
+      {": { "}
+      <span className={green}>"command"</span>
+      {": "}
+      <span className={green}>"npx"</span>
+      {", "}
+      <span className={green}>"args"</span>
+      {": ["}
+      <span className={green}>"relay-mcp"</span>
+      {"] } }"}
+    </>
+  ),
+  Cursor: (
+    <>
+      <span className="text-rl-faint">{"// .cursor/mcp.json"}</span>
+      {"\n{ "}
+      <span className={green}>"relay"</span>
+      {": { "}
+      <span className={green}>"command"</span>
+      {": "}
+      <span className={green}>"npx"</span>
+      {", "}
+      <span className={green}>"args"</span>
+      {": ["}
+      <span className={green}>"relay-mcp"</span>
+      {"] } }"}
+    </>
+  ),
+  Codex: (
+    <>
+      <span className="text-rl-faint"># ~/.codex/config.toml</span>
+      {"\n[mcp_servers.relay]\ncommand = "}
+      <span className={green}>"npx"</span>
+      {"\nargs = ["}
+      <span className={green}>"relay-mcp"</span>
+      {"]"}
+    </>
+  ),
+  CLI: (
+    <>
+      <span className="text-rl-faint">$</span> npx relay login
+      {"\n"}
+      <span className="text-rl-faint">$</span> npx relay draft --since{" "}
+      <span className={green}>#13</span>
+    </>
+  ),
+};
+
+type Client = keyof typeof CLIENTS;
+
 const TOOLS = [
   ["relay.changes.list", "Lê o que entrou em main, já triado.", "grátis"],
   ["relay.edition.draft", "Rascunha a edição no tom da marca.", "50 cr"],
-  ["relay.edition.approve", "Aprova e agenda, se você deixar.", "desligado"],
 ] as const;
 
 function AgentesPane() {
-  const green = "text-[#A9D7B9]";
+  const [client, setClient] = useState<Client>("Claude Code");
+  const [canApprove, setCanApprove] = useState(false);
+
   return (
     <>
       <PaneHead title={<span className="font-extrabold">Agentes e MCP</span>}>
@@ -1199,28 +1417,16 @@ function AgentesPane() {
       </PaneHead>
       <div className={`${pane} flex flex-col gap-2.5 p-3`}>
         <div className="flex flex-wrap gap-1.5 text-[11.5px]">
-          {["Claude Code", "Cursor", "Codex", "CLI"].map((client, i) => (
-            <span
-              className={`rounded-md border px-2 py-1 ${i === 0 ? "border-rl-edge bg-rl-chip text-rl-fg" : "border-transparent text-rl-dim"}`}
-              key={client}
-            >
-              {client}
-            </span>
+          {(Object.keys(CLIENTS) as Client[]).map((id) => (
+            <Choice key={id} on={client === id} onClick={() => setClient(id)}>
+              {id}
+            </Choice>
           ))}
         </div>
         <pre className="m-0 overflow-x-auto rounded-[10px] border border-rl-line bg-rl-ink px-3.5 py-3 font-rl-mono text-[11.5px] text-rl-soft leading-[1.6]">
-          <span className="text-rl-faint">{"// .mcp.json"}</span>
-          {"\n{ "}
-          <span className={green}>"relay"</span>
-          {": { "}
-          <span className={green}>"command"</span>
-          {": "}
-          <span className={green}>"npx"</span>
-          {", "}
-          <span className={green}>"args"</span>
-          {": ["}
-          <span className={green}>"relay-mcp"</span>
-          {"] } }"}
+          <code className="rl-swap block" key={client}>
+            {CLIENTS[client]}
+          </code>
         </pre>
         <span className="inline-flex items-center gap-2 font-rl-mono text-[10.5px] text-rl-dim">
           <span className="size-1.5 bg-rl-ok" />
@@ -1239,19 +1445,43 @@ function AgentesPane() {
               </span>
               <span className="truncate text-[11.5px] text-rl-dim">{body}</span>
             </span>
-            <span
-              className={`${pixelTag} ${cost === "desligado" ? "text-rl-faint" : "text-rl-accent-light"}`}
-            >
-              {cost}
-            </span>
+            <span className={`${pixelTag} text-rl-accent-light`}>{cost}</span>
           </div>
         ))}
+        <label className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2.5 py-2">
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="truncate font-rl-mono text-[11.5px] text-rl-fg">
+              relay.edition.approve
+            </span>
+            <span className="truncate text-[11.5px] text-rl-dim">
+              {canApprove
+                ? "O agente pode aprovar e agendar."
+                : "Desligado. Nada sai sem você."}
+            </span>
+          </span>
+          <input
+            aria-checked={canApprove}
+            checked={canApprove}
+            className="peer sr-only"
+            onChange={(event) => setCanApprove(event.target.checked)}
+            role="switch"
+            type="checkbox"
+          />
+          <span
+            aria-hidden="true"
+            className={`rl-tint flex h-[18px] w-8 items-center rounded-full p-0.5 peer-focus-visible:outline-2 peer-focus-visible:outline-rl-accent ${canApprove ? "bg-rl-accent" : "bg-rl-edge"}`}
+          >
+            <span
+              className={`rl-knob size-3.5 rounded-full bg-white ${canApprove ? "translate-x-3.5" : ""}`}
+            />
+          </span>
+        </label>
       </div>
     </>
   );
 }
 
-const PANES: Record<ViewId, () => ReactNode> = {
+const PANES: Record<ViewId, (demo: Demo) => ReactNode> = {
   inicio: InicioPane,
   mudancas: MudancasPane,
   inscritos: InscritosPane,
@@ -1259,16 +1489,18 @@ const PANES: Record<ViewId, () => ReactNode> = {
   agentes: AgentesPane,
 };
 
-function AppWindow({ view }: { view: ViewId }) {
+function AppWindow({ view, demo }: { view: ViewId; demo: Demo }) {
   const Pane = PANES[view];
   const { path } = VIEWS.find(({ id }) => id === view) ?? VIEWS[0];
+  const { go, approved, day } = demo;
 
   return (
     <div
       aria-labelledby={`painel-${view}`}
-      className="rl-reveal relative flex min-h-[560px] flex-col max-lg:min-h-[700px] overflow-hidden rounded-[18px] border border-rl-edge bg-rl-ink shadow-[0_40px_120px_-40px_#000000,0_0_0_1px_#00000066] [--rl-i:1]"
+      className="rl-reveal relative flex min-h-[560px] flex-col overflow-hidden rounded-[18px] border border-rl-edge bg-rl-ink shadow-[0_40px_120px_-40px_#000000,0_0_0_1px_#00000066] outline-none [--rl-i:1] max-lg:min-h-[700px]"
       id="painel-tela"
       role="tabpanel"
+      tabIndex={-1}
     >
       <div className="flex items-center gap-2.5 border-rl-hairline border-b bg-[#0E0F13] px-3.5 py-2.5">
         <span
@@ -1291,7 +1523,10 @@ function AppWindow({ view }: { view: ViewId }) {
         </span>
       </div>
       <div className="grid flex-1 grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)]">
-        <div className="hidden flex-col gap-3 border-rl-hairline border-r bg-[#0E0F13] px-2.5 py-3.5 md:flex">
+        <nav
+          aria-label="Painel da Tinta"
+          className="hidden flex-col gap-3 border-rl-hairline border-r bg-[#0E0F13] px-2.5 py-3.5 md:flex"
+        >
           <span className="flex items-center gap-2 px-1.5 py-0.5 font-extrabold font-rl-display text-[15px] tracking-[-0.045em]">
             <Logo size={1.6} />
             relay
@@ -1310,59 +1545,91 @@ function AppWindow({ view }: { view: ViewId }) {
           <div className="flex flex-col gap-px">
             {NAV.map(({ label, icon, view: target, meta }) => {
               const on = target === view;
-              return (
-                <span
-                  className={`rl-nav flex min-h-[30px] items-center gap-[9px] rounded-[7px] px-2 text-[12.5px] ${on ? "bg-rl-chip text-rl-fg" : "text-rl-dim"}`}
-                  key={label}
-                >
+              const row =
+                "flex min-h-[30px] items-center gap-[9px] rounded-[7px] border-0 px-2 text-left text-[12.5px]";
+              const badge =
+                label === "Edições" && !approved ? (
+                  <span className="rounded-[3px] bg-rl-accent px-[5px] py-px font-rl-pixel text-[9px] text-white">
+                    1
+                  </span>
+                ) : (
+                  meta
+                );
+              const content = (
+                <>
                   <Icon name={icon} size={14} />
                   {label}
-                  {meta && (
+                  {badge && (
                     <span className="ml-auto font-rl-mono text-[10.5px] text-[#6E717C]">
-                      {meta}
+                      {badge}
                     </span>
                   )}
+                </>
+              );
+              // Marca e envio has no screen in the demo, so it stays inert.
+              return target ? (
+                <button
+                  aria-current={on ? "page" : undefined}
+                  className={`rl-nav ${row} cursor-pointer ${on ? "bg-rl-chip text-rl-fg" : "bg-transparent text-rl-dim hover:bg-rl-raised hover:text-rl-fg"}`}
+                  key={label}
+                  onClick={() => go(target)}
+                  type="button"
+                >
+                  {content}
+                </button>
+              ) : (
+                <span className={`${row} text-[#5A5D68]`} key={label}>
+                  {content}
                 </span>
               );
             })}
           </div>
-          <div className="flex flex-col gap-1.5 rounded-[9px] border border-rl-line bg-rl-raised p-2.5">
-            <span className="flex items-center justify-between">
+          <button
+            className="rl-press flex cursor-pointer flex-col gap-1.5 rounded-[9px] border border-rl-line bg-rl-raised p-2.5 text-left hover:border-rl-edge"
+            onClick={() => go("inicio")}
+            type="button"
+          >
+            <span className="flex w-full items-center justify-between">
               <span className="font-bold font-rl-display text-[12.5px]">
                 #14
               </span>
-              <span className="font-rl-pixel text-[8.5px] text-rl-accent-light uppercase">
-                aguardando
+              <span
+                className={`font-rl-pixel text-[8.5px] uppercase ${approved ? "text-rl-ok" : "text-rl-accent-light"}`}
+              >
+                {approved ? "agendada" : "aguardando"}
               </span>
             </span>
             <span className="font-rl-mono text-[10px] text-rl-dim">
-              sex · 7 nov · 10:00
+              {day} · {DAYS[day][1]} · 10:00
             </span>
-            <span aria-hidden="true" className="grid grid-cols-12 gap-0.5">
+            <span
+              aria-hidden="true"
+              className="grid w-full grid-cols-12 gap-0.5"
+            >
               {Array.from({ length: 12 }, (_, i) => (
                 <span
-                  className={`h-1 ${i < 6 ? "bg-rl-accent" : i < 8 ? "bg-rl-accent-pale" : "bg-rl-line"}`}
+                  className={`h-1 ${approved || i < 6 ? "bg-rl-accent" : i < 8 ? "bg-rl-accent-pale" : "bg-rl-line"}`}
                   // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length meter
                   key={i}
                 />
               ))}
             </span>
-          </div>
+          </button>
           <span className="mt-auto px-1.5 pb-[30px] font-rl-mono text-[10px] text-rl-faint">
             Ana · Indie · 130 créditos
           </span>
-        </div>
+        </nav>
         {/* New key per view: @starting-style replays .rl-swap on each child. */}
         <div
           className="flex min-w-0 flex-col gap-4 px-6 pt-6 pb-9 max-sm:px-4"
           key={view}
         >
-          <Pane />
+          <Pane {...demo} />
         </div>
       </div>
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute right-0 -bottom-px left-0 grid grid-cols-[repeat(72,1fr)] auto-rows-[8px] opacity-55"
+        className="pointer-events-none absolute right-0 -bottom-px left-0 grid auto-rows-[8px] grid-cols-[repeat(72,1fr)] opacity-55"
       >
         {Array.from(HEM, (on, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: fixed pixel pattern
@@ -1377,6 +1644,8 @@ function Product() {
   const [view, setView] = useState<ViewId>("inicio");
   // Arrow keys switch instantly: keyboard moves shouldn't wait on a fade.
   const [instant, setInstant] = useState(false);
+  const [approved, setApproved] = useState(false);
+  const [day, setDay] = useState<Day>("sex");
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function onKeyDown(event: KeyboardEvent, index: number) {
@@ -1389,6 +1658,14 @@ function Product() {
     setInstant(true);
     setView(VIEWS[next].id);
     tabs.current[next]?.focus();
+  }
+
+  // Navigating from inside the screen unmounts the clicked control, so focus
+  // moves to the screen itself instead of falling back to the page.
+  function go(next: ViewId) {
+    setInstant(false);
+    setView(next);
+    document.getElementById("painel-tela")?.focus({ preventScroll: true });
   }
 
   return (
@@ -1408,7 +1685,7 @@ function Product() {
         </div>
         <p className="m-0 max-w-[380px] text-[18px] text-rl-soft">
           Uma tela por semana: o que mudou, o que vai sair, quanto custou. O
-          resto a Relay faz sozinha.
+          resto a Relay faz sozinha. Pode clicar: o painel funciona.
         </p>
       </div>
       <div
@@ -1443,7 +1720,7 @@ function Product() {
                 type="button"
               >
                 <span
-                  className={`rl-tab-icon grid size-9 place-items-center rounded-[10px] ${on ? "bg-rl-accent text-white" : "bg-rl-chip text-rl-dim"}`}
+                  className={`rl-tint grid size-9 place-items-center rounded-[10px] ${on ? "bg-rl-accent text-white" : "bg-rl-chip text-rl-dim"}`}
                 >
                   <Icon name={icon} size={18} />
                 </span>
@@ -1465,7 +1742,10 @@ function Product() {
             );
           })}
         </div>
-        <AppWindow view={view} />
+        <AppWindow
+          demo={{ go, approved, setApproved, day, setDay }}
+          view={view}
+        />
       </div>
     </section>
   );

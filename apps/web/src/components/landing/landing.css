@@ -152,8 +152,8 @@
   transition: none;
 }
 
-/* Panel tabs swap state often, so color only: no movement to wait for. */
-.rl-tab-icon,
+/* Panel controls swap state often, so color only: no movement to wait for. */
+.rl-tint,
 .rl-nav {
   transition:
     color 150ms ease,
@@ -220,6 +220,10 @@
     transition:
       opacity 300ms var(--ease-rl-out),
       transform 300ms var(--ease-rl-out);
+  }
+
+  .rl-knob {
+    transition: transform 150ms var(--ease-rl-out);
   }
 
   @starting-style {
